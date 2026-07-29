@@ -705,34 +705,23 @@
     }
 
     // 7. Button 3 Logic: "Быстрая сирена" (speed_siren.mp3)
-    // One-shot playback with instant restart if pressed while playing
+    // Plays sound instantly; rapid taps layer smoothly (polyphony)
     function handleSpeedSirenPress(e) {
       if (e) e.preventDefault();
       initAudioContext();
       if (!audioBuffers.speed_siren) return;
 
-      // Interrupt existing speed siren if currently playing
-      if (speedSirenSourceNode) {
-        try { speedSirenSourceNode.stop(); } catch(err) {}
-        speedSirenSourceNode.disconnect();
-        speedSirenSourceNode = null;
-      }
-
       const source = audioCtx.createBufferSource();
       source.buffer = audioBuffers.speed_siren;
       source.connect(masterGainNode);
 
-      speedSirenSourceNode = source;
       btnSpeed.classList.add('active');
       lcdStatus.textContent = 'РЕЖИМ: БЫСТРАЯ СИРЕНА';
 
       source.onended = () => {
-        if (speedSirenSourceNode === source) {
-          speedSirenSourceNode = null;
-          btnSpeed.classList.remove('active');
-          if (!isSirenActive && !twoSirenSourceNode) {
-            lcdStatus.textContent = 'СГУ ГОТОВ К РАБОТЕ';
-          }
+        btnSpeed.classList.remove('active');
+        if (!isSirenActive) {
+          lcdStatus.textContent = 'СГУ ГОТОВ К РАБОТЕ';
         }
       };
 
@@ -740,34 +729,23 @@
     }
 
     // 8. Button 4 Logic: "Двойная сирена" (two_siren.mp3)
-    // One-shot playback with instant restart if pressed while playing
+    // Plays sound instantly; rapid taps layer smoothly (polyphony)
     function handleTwoSirenPress(e) {
       if (e) e.preventDefault();
       initAudioContext();
       if (!audioBuffers.two_siren) return;
 
-      // Interrupt existing two siren if currently playing
-      if (twoSirenSourceNode) {
-        try { twoSirenSourceNode.stop(); } catch(err) {}
-        twoSirenSourceNode.disconnect();
-        twoSirenSourceNode = null;
-      }
-
       const source = audioCtx.createBufferSource();
       source.buffer = audioBuffers.two_siren;
       source.connect(masterGainNode);
 
-      twoSirenSourceNode = source;
       btnTwo.classList.add('active');
       lcdStatus.textContent = 'РЕЖИМ: ДВОЙНАЯ СИРЕНА';
 
       source.onended = () => {
-        if (twoSirenSourceNode === source) {
-          twoSirenSourceNode = null;
-          btnTwo.classList.remove('active');
-          if (!isSirenActive && !speedSirenSourceNode) {
-            lcdStatus.textContent = 'СГУ ГОТОВ К РАБОТЕ';
-          }
+        btnTwo.classList.remove('active');
+        if (!isSirenActive) {
+          lcdStatus.textContent = 'СГУ ГОТОВ К РАБОТЕ';
         }
       };
 
