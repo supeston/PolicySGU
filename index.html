@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Пульт СГУ ДПС (Спецсигнал)</title>
+  <style>
+    /* Global styles & reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body {
+      background-color: #0b0d12;
+      background-image: 
+        radial-gradient(circle at 50% 30%, #1e2430 0%, #08090c 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.4) 3px, rgba(0, 0, 0, 0.4) 3px);
+      color: #e0e6ed;
+      font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+
+    /* Main Console Box */
+    .sgu-console {
+      width: 100%;
+      max-width: 480px;
+      background: linear-gradient(145deg, #1c2028, #14171d);
+      border: 2px solid #2d3442;
+      border-radius: 20px;
+      padding: 24px 20px;
+      box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.8),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 5px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+
+    /* Console Top Header & Brand */
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #282f3d;
+    }
+
+    .brand-title {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title h1 {
+      font-size: 1.3rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #f0f4f8;
+      text-transform: uppercase;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    .brand-title span {
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      color: #00d2ff;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    /* LED Status Indicators Top Right */
+    .status-leds {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .led-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .led-label {
+      font-size: 0.6rem;
+      color: #7a8b9e;
+      font-weight: 700;
+    }
+
+    .led {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #1a202c;
+      border: 1px solid #000;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+      transition: all 0.2s ease;
+    }
+
+    .led.green.on {
+      background-color: #00ff66;
+      box-shadow: 0 0 10px #00ff66, inset 0 -1px 2px rgba(0,0,0,0.5);
+    }
+
+    .led.red.on {
+      background-color: #ff3344;
+      box-shadow: 0 0 10px #ff3344, inset 0 -1px 2px rgba(0,0,0,0.5);
+    }
+
+    .led.yellow.on {
+      background-color: #ffc107;
+      box-shadow: 0 0 10px #ffc107, inset 0 -1px 2px rgba(0,0,0,0.5);
+    }
+
+    /* LCD Screen Display */
+    .lcd-display {
+      background: #080d14;
+      border: 2px solid #1a2433;
+      border-radius: 10px;
+      padding: 12px 15px;
+      margin-bottom: 22px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    .lcd-line-1 {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #00e5ff;
+      text-shadow: 0 0 5px rgba(0, 229, 255, 0.5);
+      font-weight: bold;
+    }
+
+    .lcd-line-2 {
+      font-size: 0.75rem;
+      color: #4a6572;
+      min-height: 1.2em;
+    }
+
+    .lcd-line-2.active-text {
+      color: #ff3344;
+      text-shadow: 0 0 6px rgba(255, 51, 68, 0.6);
+      font-weight: bold;
+    }
+
+    /* Progress bar for audio loading */
+    .load-bar-container {
+      width: 100%;
+      height: 4px;
+      background: #101622;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .load-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #00d2ff, #00ff66);
+      transition: width 0.3s ease;
+    }
+
+    /* Master Buttons Grid */
+    .buttons-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    /* SGU Button Styling */
+    .sgu-btn {
+      position: relative;
+      height: 110px;
+      border-radius: 16px;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .sgu-btn:active {
+      transform: translateY(4px) scale(0.98);
+    }
+
+    .btn-num {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      opacity: 0.6;
+    }
+
+    .btn-title {
+      font-size: 1.05rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .btn-sub {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.85;
+    }
+
+    .btn-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: rgba(0, 0, 0, 0.4);
+      margin-top: 2px;
+      transition: all 0.2s ease;
+    }
+
+    /* Button 1: Крякалка (Horn / Crack) - Amber/Yellow */
+    .btn-crack {
+      background: linear-gradient(145deg, #d97706, #b45309);
+      color: #fff;
+      border: 2px solid #f59e0b;
+      box-shadow: 
+        0 8px 0 #78350f,
+        0 12px 18px rgba(0, 0, 0, 0.6),
+        inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-crack:active, .btn-crack.pulsing {
+      box-shadow: 
+        0 2px 0 #78350f,
+        0 4px 8px rgba(0, 0, 0, 0.6),
+        inset 0 1px 2px rgba(255, 255, 255, 0.6);
+      background: linear-gradient(145deg, #f59e0b, #d97706);
+    }
+
+    .btn-crack.pulsing .btn-indicator {
+      background-color: #ffffff;
+      box-shadow: 0 0 8px #ffffff;
+    }
+
+    /* Button 2: Основная сирена (Main Siren) - Red Toggle */
+    .btn-siren {
+      background: linear-gradient(145deg, #dc2626, #991b1b);
+      color: #fff;
+      border: 2px solid #ef4444;
+      box-shadow: 
+        0 8px 0 #7f1d1d,
+        0 12px 18px rgba(0, 0, 0, 0.6),
+        inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-siren:active {
+      box-shadow: 
+        0 2px 0 #7f1d1d,
+        0 4px 8px rgba(0, 0, 0, 0.6);
+    }
+
+    .btn-siren.active {
+      background: linear-gradient(145deg, #ef4444, #dc2626);
+      border-color: #ff8888;
+      box-shadow: 
+        0 2px 0 #7f1d1d,
+        0 0 25px rgba(239, 68, 68, 0.8),
+        inset 0 2px 4px rgba(255, 255, 255, 0.5);
+      animation: sirenGlow 1s infinite alternate;
+    }
+
+    .btn-siren.active .btn-indicator {
+      background-color: #ff3344;
+      box-shadow: 0 0 10px #ff3344;
+    }
+
+    @keyframes sirenGlow {
+      from { filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.6)); }
+      to { filter: drop-shadow(0 0 15px rgba(259, 68, 68, 0.9)); }
+    }
+
+    /* Button 3: Быстрая сирена (Speed Siren) - Blue */
+    .btn-speed {
+      background: linear-gradient(145deg, #2563eb, #1d4ed8);
+      color: #fff;
+      border: 2px solid #3b82f6;
+      box-shadow: 
+        0 8px 0 #1e40af,
+        0 12px 18px rgba(0, 0, 0, 0.6),
+        inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-speed:active, .btn-speed.active {
+      background: linear-gradient(145deg, #3b82f6, #2563eb);
+      box-shadow: 
+        0 2px 0 #1e40af,
+        0 0 20px rgba(59, 130, 246, 0.8),
+        inset 0 2px 4px rgba(255, 255, 255, 0.5);
+    }
+
+    .btn-speed.active .btn-indicator {
+      background-color: #60a5fa;
+      box-shadow: 0 0 10px #60a5fa;
+    }
+
+    /* Button 4: Двойная сирена (Two Siren) - Cyan/Teal */
+    .btn-two {
+      background: linear-gradient(145deg, #0d9488, #0f766e);
+      color: #fff;
+      border: 2px solid #14b8a6;
+      box-shadow: 
+        0 8px 0 #115e59,
+        0 12px 18px rgba(0, 0, 0, 0.6),
+        inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-two:active, .btn-two.active {
+      background: linear-gradient(145deg, #14b8a6, #0d9488);
+      box-shadow: 
+        0 2px 0 #115e59,
+        0 0 20px rgba(20, 184, 166, 0.8),
+        inset 0 2px 4px rgba(255, 255, 255, 0.5);
+    }
+
+    .btn-two.active .btn-indicator {
+      background-color: #2dd4bf;
+      box-shadow: 0 0 10px #2dd4bf;
+    }
+
+    /* Volume & Master Controls */
+    .console-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #11141a;
+      border-radius: 12px;
+      padding: 12px 16px;
+      border: 1px solid #232a36;
+    }
+
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      margin-right: 15px;
+    }
+
+    .volume-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #8b9bb4;
+      text-transform: uppercase;
+    }
+
+    .volume-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: #1f2937;
+      outline: none;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #00d2ff;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0, 210, 255, 0.8);
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #00d2ff;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0, 210, 255, 0.8);
+      border: none;
+    }
+
+    /* Fullscreen Hint Notice */
+    .fullscreen-hint {
+      margin-top: 24px;
+      font-size: 0.8rem;
+      color: #64748b;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .fullscreen-hint svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* Warning message box for local protocol issues */
+    .cors-warning {
+      display: none;
+      background: #451a1a;
+      border: 1px solid #7f1d1d;
+      color: #fca5a5;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      margin-top: 12px;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* Media query for smaller mobile screens */
+    @media (max-width: 400px) {
+      .sgu-btn {
+        height: 95px;
+      }
+      .btn-title {
+        font-size: 0.9rem;
+      }
+      .brand-title h1 {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main SGU Physical Console Unit -->
+  <div class="sgu-console" id="sguConsole">
+    
+    <!-- Top Header with Brand and Status LEDs -->
+    <div class="console-header">
+      <div class="brand-title">
+        <h1>СГУ-120 ДПС</h1>
+        <span>СПЕЦСИГНАЛ МВД</span>
+      </div>
+      
+      <div class="status-leds">
+        <div class="led-group">
+          <div class="led green on" id="powerLed"></div>
+          <span class="led-label">СЕТЬ</span>
+        </div>
+        <div class="led-group">
+          <div class="led red" id="sirenLed"></div>
+          <span class="led-label">СИРЕНА</span>
+        </div>
+        <div class="led-group">
+          <div class="led yellow" id="audioLed"></div>
+          <span class="led-label">ЗВУК</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LCD Display -->
+    <div class="lcd-display">
+      <div class="lcd-line-1">
+        <span>РЕЖИМ: ГОТОВ</span>
+        <span id="lcdVol">VOL: 100%</span>
+      </div>
+      <div class="lcd-line-2" id="lcdStatus">Загрузка аудиофайлов...</div>
+      <div class="load-bar-container">
+        <div class="load-bar" id="loadBar"></div>
+      </div>
+    </div>
+
+    <!-- Buttons Grid 2x2 -->
+    <div class="buttons-grid">
+      <!-- Button 1: Crack / Крякалка -->
+      <button class="sgu-btn btn-crack interactive-control" id="btnCrack">
+        <span class="btn-num">01</span>
+        <span class="btn-title">КРЯКАЛКА</span>
+        <span class="btn-sub">HORN / CRACK</span>
+        <div class="btn-indicator"></div>
+      </button>
+
+      <!-- Button 2: Siren / Основная сирена -->
+      <button class="sgu-btn btn-siren interactive-control" id="btnSiren">
+        <span class="btn-num">02</span>
+        <span class="btn-title">СИРЕНА</span>
+        <span class="btn-sub">ОСНОВНАЯ (LOOP)</span>
+        <div class="btn-indicator"></div>
+      </button>
+
+      <!-- Button 3: Speed Siren / Быстрая сирена -->
+      <button class="sgu-btn btn-speed interactive-control" id="btnSpeed">
+        <span class="btn-num">03</span>
+        <span class="btn-title">БЫСТРАЯ</span>
+        <span class="btn-sub">WAIL / RESTART</span>
+        <div class="btn-indicator"></div>
+      </button>
+
+      <!-- Button 4: Two Siren / Двойная сирена -->
+      <button class="sgu-btn btn-two interactive-control" id="btnTwo">
+        <span class="btn-num">04</span>
+        <span class="btn-title">ДВОЙНАЯ</span>
+        <span class="btn-sub">YELP / RESTART</span>
+        <div class="btn-indicator"></div>
+      </button>
+    </div>
+
+    <!-- Master Controls Footer -->
+    <div class="console-footer">
+      <div class="volume-container">
+        <span class="volume-label">ГРОМКОСТЬ:</span>
+        <input type="range" min="0" max="100" value="100" class="volume-slider interactive-control" id="volumeControl">
+      </div>
+    </div>
+
+    <!-- Local File Protocol Warning (shown if CORS fetch fails) -->
+    <div class="cors-warning" id="corsWarning">
+      ⚠️ Внимание: Браузер заблокировал загрузку локальных аудиофайлов через file://.<br>
+      Пожалуйста, запустите страницу через локальный сервер (например, extension <b>Live Server</b> в VS Code или <b>python -m http.server</b>).
+    </div>
+
+  </div>
+
+  <!-- Hint for Fullscreen Toggle -->
+  <div class="fullscreen-hint">
+    <svg viewBox="0 0 24 24">
+      <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+    </svg>
+    Двойной клик/тап в любом месте — Полноэкранный режим
+  </div>
+
+  <script>
+    /* ==========================================================================
+       СГУ ДПС - WEB AUDIO API CONTROL LOGIC
+       ========================================================================== */
+
+    // 1. Audio Files Configuration
+    const AUDIO_FILES = {
+      crack: './crack.mp3',
+      siren: './siren.mp3',
+      speed_siren: './speed_siren.mp3',
+      two_siren: './two_siren.mp3'
+    };
+
+    // 2. Web Audio API Context & State Storage
+    let audioCtx = null;
+    let masterGainNode = null;
+    const audioBuffers = {};
+
+    // Playback state node references
+    let sirenSourceNode = null;       // Button 2: Looping background siren node
+    let isSirenActive = false;
+
+    let speedSirenSourceNode = null;  // Button 3: One-shot speed siren node
+    let twoSirenSourceNode = null;    // Button 4: One-shot two siren node
+
+    // DOM Element References
+    const lcdStatus = document.getElementById('lcdStatus');
+    const loadBar = document.getElementById('loadBar');
+    const audioLed = document.getElementById('audioLed');
+    const sirenLed = document.getElementById('sirenLed');
+    const corsWarning = document.getElementById('corsWarning');
+    const lcdVol = document.getElementById('lcdVol');
+
+    const btnCrack = document.getElementById('btnCrack');
+    const btnSiren = document.getElementById('btnSiren');
+    const btnSpeed = document.getElementById('btnSpeed');
+    const btnTwo = document.getElementById('btnTwo');
+    const volumeControl = document.getElementById('volumeControl');
+
+    // 3. Audio Context Initialization (User Interaction Handler)
+    function initAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+        masterGainNode = audioCtx.createGain();
+        masterGainNode.gain.value = volumeControl.value / 100;
+        masterGainNode.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // 4. Audio Preloader using Fetch & decodeAudioData
+    async function preloadAudioFiles() {
+      const keys = Object.keys(AUDIO_FILES);
+      let loadedCount = 0;
+
+      lcdStatus.textContent = 'Загрузка звуковых модулей...';
+
+      // Temporary audio context for pre-decoding if context not yet initialized
+      const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      for (const key of keys) {
+        const url = AUDIO_FILES[key];
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const arrayBuffer = await response.arrayBuffer();
+          const decodedBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+          audioBuffers[key] = decodedBuffer;
+
+          loadedCount++;
+          const progress = Math.round((loadedCount / keys.length) * 100);
+          loadBar.style.width = progress + '%';
+          lcdStatus.textContent = `Загрузка: ${progress}% (${key}.mp3)`;
+        } catch (err) {
+          console.error(`Ошибка загрузки аудиофайла [${key}]:`, err);
+          lcdStatus.textContent = 'ОШИБКА ЗАГРУЗКИ АУДИО';
+          lcdStatus.classList.add('active-text');
+          
+          // Display CORS / File protocol notification if fetch fails on file://
+          if (window.location.protocol === 'file:') {
+            corsWarning.style.display = 'block';
+          }
+          return;
+        }
+      }
+
+      // Preload Complete
+      tempCtx.close();
+      lcdStatus.textContent = 'СГУ ГОТОВ К РАБОТЕ';
+      audioLed.classList.add('on');
+    }
+
+    // 5. Button 1 Logic: "Крякалка" (crack.mp3)
+    // Polyphonic playback - Creates a new AudioBufferSourceNode on each trigger
+    function handleCrackPress(e) {
+      if (e) e.preventDefault();
+      initAudioContext();
+      if (!audioBuffers.crack) return;
+
+      const source = audioCtx.createBufferSource();
+      source.buffer = audioBuffers.crack;
+      source.connect(masterGainNode);
+      source.start(0);
+
+      // Visual flash animation
+      btnCrack.classList.add('pulsing');
+      setTimeout(() => btnCrack.classList.remove('pulsing'), 150);
+      lcdStatus.textContent = 'СИГНАЛ: КРЯКАЛКА';
+    }
+
+    // 6. Button 2 Logic: "Основная сирена" (siren.mp3)
+    // Toggle state - Looping background siren
+    function handleSirenToggle(e) {
+      if (e) e.preventDefault();
+      initAudioContext();
+      if (!audioBuffers.siren) return;
+
+      if (isSirenActive) {
+        // Stop Siren
+        if (sirenSourceNode) {
+          try { sirenSourceNode.stop(); } catch(err) {}
+          sirenSourceNode.disconnect();
+          sirenSourceNode = null;
+        }
+        isSirenActive = false;
+        btnSiren.classList.remove('active');
+        sirenLed.classList.remove('on');
+        lcdStatus.textContent = 'СИРЕНА ВЫКЛЮЧЕНА';
+      } else {
+        // Start Siren Loop
+        sirenSourceNode = audioCtx.createBufferSource();
+        sirenSourceNode.buffer = audioBuffers.siren;
+        sirenSourceNode.loop = true;
+        sirenSourceNode.connect(masterGainNode);
+        sirenSourceNode.start(0);
+
+        isSirenActive = true;
+        btnSiren.classList.add('active');
+        sirenLed.classList.add('on');
+        lcdStatus.textContent = 'РЕЖИМ: ОСНОВНАЯ СИРЕНА';
+      }
+    }
+
+    // 7. Button 3 Logic: "Быстрая сирена" (speed_siren.mp3)
+    // One-shot playback with instant restart if pressed while playing
+    function handleSpeedSirenPress(e) {
+      if (e) e.preventDefault();
+      initAudioContext();
+      if (!audioBuffers.speed_siren) return;
+
+      // Interrupt existing speed siren if currently playing
+      if (speedSirenSourceNode) {
+        try { speedSirenSourceNode.stop(); } catch(err) {}
+        speedSirenSourceNode.disconnect();
+        speedSirenSourceNode = null;
+      }
+
+      const source = audioCtx.createBufferSource();
+      source.buffer = audioBuffers.speed_siren;
+      source.connect(masterGainNode);
+
+      speedSirenSourceNode = source;
+      btnSpeed.classList.add('active');
+      lcdStatus.textContent = 'РЕЖИМ: БЫСТРАЯ СИРЕНА';
+
+      source.onended = () => {
+        if (speedSirenSourceNode === source) {
+          speedSirenSourceNode = null;
+          btnSpeed.classList.remove('active');
+          if (!isSirenActive && !twoSirenSourceNode) {
+            lcdStatus.textContent = 'СГУ ГОТОВ К РАБОТЕ';
+          }
+        }
+      };
+
+      source.start(0);
+    }
+
+    // 8. Button 4 Logic: "Двойная сирена" (two_siren.mp3)
+    // One-shot playback with instant restart if pressed while playing
+    function handleTwoSirenPress(e) {
+      if (e) e.preventDefault();
+      initAudioContext();
+      if (!audioBuffers.two_siren) return;
+
+      // Interrupt existing two siren if currently playing
+      if (twoSirenSourceNode) {
+        try { twoSirenSourceNode.stop(); } catch(err) {}
+        twoSirenSourceNode.disconnect();
+        twoSirenSourceNode = null;
+      }
+
+      const source = audioCtx.createBufferSource();
+      source.buffer = audioBuffers.two_siren;
+      source.connect(masterGainNode);
+
+      twoSirenSourceNode = source;
+      btnTwo.classList.add('active');
+      lcdStatus.textContent = 'РЕЖИМ: ДВОЙНАЯ СИРЕНА';
+
+      source.onended = () => {
+        if (twoSirenSourceNode === source) {
+          twoSirenSourceNode = null;
+          btnTwo.classList.remove('active');
+          if (!isSirenActive && !speedSirenSourceNode) {
+            lcdStatus.textContent = 'СГУ ГОТОВ К РАБОТЕ';
+          }
+        }
+      };
+
+      source.start(0);
+    }
+
+    // 9. Low Latency Event Binding (Pointer Events / Touch Instant Trigger)
+    function bindInstantButton(element, handler) {
+      element.addEventListener('pointerdown', handler);
+    }
+
+    bindInstantButton(btnCrack, handleCrackPress);
+    bindInstantButton(btnSiren, handleSirenToggle);
+    bindInstantButton(btnSpeed, handleSpeedSirenPress);
+    bindInstantButton(btnTwo, handleTwoSirenPress);
+
+    // Volume Slider Handler
+    volumeControl.addEventListener('input', (e) => {
+      const val = e.target.value;
+      if (masterGainNode) {
+        masterGainNode.gain.value = val / 100;
+      }
+      lcdVol.textContent = `VOL: ${val}%`;
+    });
+
+    // 10. Fullscreen API (Double click / Double tap on empty space)
+    let lastTapTime = 0;
+
+    function handleDoubleTapFullscreen(e) {
+      // Ignore if user clicked on interactive control elements
+      if (e.target.closest('.interactive-control')) {
+        return;
+      }
+
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTapTime;
+
+      // Double tap threshold (300ms) or standard dblclick event
+      if ((tapLength < 300 && tapLength > 0) || e.type === 'dblclick') {
+        if (e) e.preventDefault();
+        toggleFullscreenMode();
+      }
+      lastTapTime = currentTime;
+    }
+
+    function toggleFullscreenMode() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn('Не удалось войти в полноэкранный режим:', err);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Attach fullscreen triggers to document body
+    document.body.addEventListener('dblclick', handleDoubleTapFullscreen);
+    document.body.addEventListener('touchend', handleDoubleTapFullscreen);
+
+    // Initialize Preloading on DOM ready
+    window.addEventListener('DOMContentLoaded', preloadAudioFiles);
+  </script>
+</body>
+</html>
