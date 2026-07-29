@@ -87,8 +87,9 @@
     .led.green.on { background: #0f4; box-shadow: 0 0 12px #0f4, inset 0 -1px 2px rgba(0, 0, 0, .4); }
     .led.red.on { background: #f03; box-shadow: 0 0 14px #f03, inset 0 -1px 2px rgba(0, 0, 0, .4); }
     .led.blue.on { background: #08f; box-shadow: 0 0 14px #08f, inset 0 -1px 2px rgba(0, 0, 0, .4); }
-    .lcd-screen { background: #04090f; border: 2px solid #1a2636; border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; box-shadow: inset 0 2px 10px rgba(0, 0, 0, .95); font-family: 'Courier New', monospace; }
-    .lcd-row-1 { display: flex; justify-content: center; color: #00e5ff; font-size: .85rem; font-weight: 700; text-shadow: 0 0 6px rgba(0, 229, 255, .6); margin-bottom: 4px; }
+    .lcd-screen { background: #04090f; border: 2px solid #1a2636; border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; box-shadow: inset 0 2px 10px rgba(0, 0, 0, .95); font-family: 'Courier New', monospace; text-align: center; }
+    .lcd-row-1 { display: flex; justify-content: space-between; align-items: center; color: #00e5ff; font-size: .85rem; font-weight: 700; text-shadow: 0 0 6px rgba(0, 229, 255, .6); margin-bottom: 4px; }
+    .lcd-status { font-size: 0.75rem; color: #4ade80; text-shadow: 0 0 5px rgba(74, 222, 128, 0.5); text-transform: uppercase; margin-top: 4px; letter-spacing: 1px; min-height: 1.1em; }
     .progress-bar-bg { width: 100%; height: 4px; background: #0d1520; margin-top: 6px; border-radius: 2px; overflow: hidden; }
     .progress-bar-fill { width: 0%; height: 100%; background: #00e5ff; box-shadow: 0 0 8px rgba(0, 229, 255, .8); transition: width .2s ease; }
     .buttons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
@@ -106,8 +107,11 @@
     .btn-speed.active, .btn-speed:active { background: linear-gradient(145deg, #2563eb 0, #1d4ed8 100%); box-shadow: 0 2px 0 #172554, 0 0 22px rgba(37, 99, 235, .95), inset 0 2px 4px rgba(255, 255, 255, .6); }
     .btn-two { background: linear-gradient(145deg, #0284c7 0, #0f172a 100%); color: #fff; border-color: #38bdf8; box-shadow: 0 7px 0 #0c4a6e, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
     .btn-two.active, .btn-two:active { background: linear-gradient(145deg, #0369a1 0, #0284c7 100%); box-shadow: 0 2px 0 #0c4a6e, 0 0 22px rgba(56, 189, 248, .95), inset 0 2px 4px rgba(255, 255, 255, .6); }
-    .btn-cracksiren { background: linear-gradient(145deg, #0f3661 0, #081d36 100%); color: #fff; border-color: #38bdf8; box-shadow: 0 7px 0 #040e1a, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); grid-column: span 2; }
+    .btn-cracksiren { background: linear-gradient(145deg, #0f3661 0, #081d36 100%); color: #fff; border-color: #38bdf8; box-shadow: 0 7px 0 #040e1a, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
     .btn-cracksiren.active, .btn-cracksiren:active { background: linear-gradient(145deg, #0284c7 0, #0f3661 100%); box-shadow: 0 2px 0 #040e1a, 0 0 22px rgba(56, 189, 248, .95), inset 0 2px 4px rgba(255, 255, 255, .6); }
+    .btn-mic { background: linear-gradient(145deg, #064e3b 0, #022c22 100%); color: #fff; border-color: #10b981; box-shadow: 0 7px 0 #06281e, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
+    .btn-mic.active, .btn-mic:active { background: linear-gradient(145deg, #059669 0, #047857 100%); border-color: #34d399; box-shadow: 0 2px 0 #06281e, 0 0 25px rgba(16, 185, 129, .95), inset 0 2px 4px rgba(255, 255, 255, .6); animation: pulseGreenBtn .5s infinite alternate; }
+    @keyframes pulseGreenBtn { 0% { filter: brightness(1); } 100% { filter: brightness(1.35); } }
     .console-footer { background: #090c10; border: 2px solid #1e293b; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
     .volume-box { display: flex; align-items: center; gap: 12px; width: 100%; }
     .vol-text { font-size: .7rem; font-weight: 700; color: #94a3b8; letter-spacing: 1px; white-space: nowrap; }
@@ -141,7 +145,9 @@
     <div class="lcd-screen">
       <div class="lcd-row-1">
         <span id="lcdVolumeText">ГРОМКОСТЬ: 100%</span>
+        <span style="font-size: 0.75rem; color: #64748b;">СГУ-120</span>
       </div>
+      <div class="lcd-status" id="lcdStatusText">СГУ ДПС ГОТОВ К РАБОТЕ</div>
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
     </div>
     <div class="buttons-grid">
@@ -165,6 +171,11 @@
         <span class="btn-badge">05</span>
         <span class="btn-main-text">КРЯК-СИРЕНА</span>
       </button>
+      <button class="sgu-btn btn-mic interactive-control" id="btnMic">
+        <span class="btn-badge">06</span>
+        <span class="btn-main-text">МИКРОФОН</span>
+        <span class="btn-sub-text">УДЕРЖИВАЙТЕ</span>
+      </button>
     </div>
     <div class="console-footer">
       <div class="volume-box">
@@ -174,7 +185,7 @@
     </div>
     <div class="cors-box" id="corsBox">⚠️ Ошибка чтения локальных файлов по file://. Запустите через локальный сервер (Live Server / python -m http.server).</div>
   </div>
-  <div class="hint-bar">Двойной клик/тап в любом месте — Полноэкранный режим</div>
+  <div class="hint-bar">Зажмите "МИКРОФОН" для громкой связи СГУ | Двойной клик — Полноэкранный режим</div>
 
   <script>
     const AUDIO_FILES = {
@@ -187,6 +198,7 @@
 
     let audioCtx = null;
     let masterGainNode = null;
+    let sguSoundsGainNode = null; // Bus for sirens and sounds (allows ducking when speaking)
     const audioBuffers = {};
 
     let sirenSourceNode = null;
@@ -194,6 +206,17 @@
     let isSirenActive = false;
     let lastTwoSirenTime = 0;
     let lastCrackSirenTime = 0;
+
+    // Microphone SGU nodes
+    let micStream = null;
+    let micSourceNode = null;
+    let micGainNode = null;
+    let micHighpass = null;
+    let micLowpass = null;
+    let micPresence = null;
+    let micCompressor = null;
+    let micDistortion = null;
+    let isMicActive = false;
 
     const lcdStatusText = document.getElementById("lcdStatusText");
     const progressBar = document.getElementById("progressBar");
@@ -206,6 +229,7 @@
     const btnSpeed = document.getElementById("btnSpeed");
     const btnTwo = document.getElementById("btnTwo");
     const btnCrackSiren = document.getElementById("btnCrackSiren");
+    const btnMic = document.getElementById("btnMic");
     const volRange = document.getElementById("volRange");
 
     function initAudioContext() {
@@ -215,6 +239,11 @@
         masterGainNode = audioCtx.createGain();
         masterGainNode.gain.value = volRange.value / 100;
         masterGainNode.connect(audioCtx.destination);
+
+        // Sub-bus for sirens & sound effects to enable audio ducking while mic is active
+        sguSoundsGainNode = audioCtx.createGain();
+        sguSoundsGainNode.gain.value = 1.0;
+        sguSoundsGainNode.connect(masterGainNode);
       }
       if (audioCtx.state === "suspended") {
         audioCtx.resume();
@@ -241,7 +270,6 @@
           console.error(err);
           if (lcdStatusText) {
             lcdStatusText.textContent = "ОШИБКА ЗАГРУЗКИ ФАЙЛОВ";
-            lcdStatusText.classList.add("active-alert");
           }
           if (window.location.protocol === "file:") {
             corsBox.style.display = "block";
@@ -272,9 +300,7 @@
       const now = audioCtx.currentTime;
       const duration = source.buffer.duration;
 
-      // Soft attack (15ms) to prevent initial click
       const fadeIn = 0.015;
-      // Smooth decay (180ms fade out) at the tail end of sound
       const fadeOut = 0.18;
 
       gainNode.gain.setValueAtTime(0.0001, now);
@@ -286,7 +312,7 @@
       }
 
       source.connect(gainNode);
-      gainNode.connect(masterGainNode);
+      gainNode.connect(sguSoundsGainNode); // Connect sound effects to duckable sguSoundsGainNode bus
 
       source.onended = () => {
         try { source.disconnect(); } catch (e) {}
@@ -311,7 +337,7 @@
 
       if (isSirenActive) {
         if (sirenSourceNode && sirenGainNode) {
-          const fadeOutTime = 0.25; // 250ms smooth fade out upon turning siren off
+          const fadeOutTime = 0.25;
           const now = audioCtx.currentTime;
           const nodeToStop = sirenSourceNode;
           const gainToDisconnect = sirenGainNode;
@@ -336,14 +362,14 @@
         const now = audioCtx.currentTime;
         sirenGainNode = audioCtx.createGain();
         sirenGainNode.gain.setValueAtTime(0.0001, now);
-        sirenGainNode.gain.linearRampToValueAtTime(1.0, now + 0.05); // 50ms soft attack
+        sirenGainNode.gain.linearRampToValueAtTime(1.0, now + 0.05);
 
         sirenSourceNode = audioCtx.createBufferSource();
         sirenSourceNode.buffer = audioBuffers.siren;
         sirenSourceNode.loop = true;
 
         sirenSourceNode.connect(sirenGainNode);
-        sirenGainNode.connect(masterGainNode);
+        sirenGainNode.connect(sguSoundsGainNode); // Connect siren to duckable sguSoundsGainNode bus
         sirenSourceNode.start(now);
 
         isSirenActive = true;
@@ -360,7 +386,7 @@
       if (lcdStatusText) lcdStatusText.textContent = "РЕЖИМ: БЫСТРАЯ СИРЕНА";
       playSingleSoundWithFade("speed_siren", () => {
         btnSpeed.classList.remove("active");
-        if (!isSirenActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+        if (!isSirenActive && !isMicActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
       });
     }
 
@@ -381,7 +407,7 @@
         if (activeTwoSirenCount <= 0) {
           activeTwoSirenCount = 0;
           btnTwo.classList.remove("active");
-          if (!isSirenActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+          if (!isSirenActive && !isMicActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
         }
       });
     }
@@ -403,9 +429,137 @@
         if (activeCrackSirenCount <= 0) {
           activeCrackSirenCount = 0;
           btnCrackSiren.classList.remove("active");
-          if (!isSirenActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+          if (!isSirenActive && !isMicActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
         }
       });
+    }
+
+    // Optimal SGU Horn Loudspeaker Overdrive Saturation Curve
+    function createBalancedSguDistortionCurve() {
+      const samples = 44100;
+      const curve = new Float32Array(samples);
+      const drive = 4.8;
+      for (let i = 0; i < samples; i++) {
+        const x = (i * 2) / samples - 1;
+        curve[i] = Math.tanh(x * drive);
+      }
+      return curve;
+    }
+
+    async function startMicrophone(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      initAudioContext();
+
+      if (audioCtx && audioCtx.state === "suspended") {
+        await audioCtx.resume();
+      }
+
+      if (isMicActive) return;
+      isMicActive = true;
+      btnMic.classList.add("active");
+      if (lcdStatusText) lcdStatusText.textContent = "🎤 ГРОМКАЯ СВЯЗЬ: МИКРОФОН АКТИВЕН";
+
+      // Duck background siren and sounds volume smoothly to 20% while mic is active
+      if (sguSoundsGainNode && audioCtx) {
+        const now = audioCtx.currentTime;
+        const currentVal = sguSoundsGainNode.gain.value;
+        sguSoundsGainNode.gain.cancelScheduledValues(now);
+        sguSoundsGainNode.gain.setValueAtTime(currentVal, now);
+        sguSoundsGainNode.gain.linearRampToValueAtTime(0.2, now + 0.1);
+      }
+
+      try {
+        if (!micStream) {
+          micStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: true
+            }
+          });
+        }
+
+        if (!micSourceNode && micStream) {
+          micSourceNode = audioCtx.createMediaStreamSource(micStream);
+
+          const micDriveGain = audioCtx.createGain();
+          micDriveGain.gain.value = 1.8;
+
+          micDistortion = audioCtx.createWaveShaper();
+          micDistortion.curve = createBalancedSguDistortionCurve();
+          micDistortion.oversample = "2x";
+
+          micHighpass = audioCtx.createBiquadFilter();
+          micHighpass.type = "highpass";
+          micHighpass.frequency.value = 380;
+
+          micLowpass = audioCtx.createBiquadFilter();
+          micLowpass.type = "lowpass";
+          micLowpass.frequency.value = 2400;
+
+          micPresence = audioCtx.createBiquadFilter();
+          micPresence.type = "peaking";
+          micPresence.frequency.value = 1250;
+          micPresence.Q.value = 2.0;
+          micPresence.gain.value = 9.5;
+
+          micCompressor = audioCtx.createDynamicsCompressor();
+          micCompressor.threshold.value = -22;
+          micCompressor.knee.value = 6;
+          micCompressor.ratio.value = 5.5;
+          micCompressor.attack.value = 0.002;
+          micCompressor.release.value = 0.05;
+
+          micGainNode = audioCtx.createGain();
+          micGainNode.gain.value = 3.8;
+
+          micSourceNode.connect(micDriveGain);
+          micDriveGain.connect(micDistortion);
+          micDistortion.connect(micHighpass);
+          micHighpass.connect(micLowpass);
+          micLowpass.connect(micPresence);
+          micPresence.connect(micCompressor);
+          micCompressor.connect(micGainNode);
+          micGainNode.connect(masterGainNode);
+        } else if (micGainNode) {
+          micGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+          micGainNode.gain.setValueAtTime(3.8, audioCtx.currentTime);
+        }
+
+        if (micStream) {
+          micStream.getAudioTracks().forEach(track => track.enabled = true);
+        }
+      } catch (err) {
+        console.error("Microphone access error:", err);
+        isMicActive = false;
+        btnMic.classList.remove("active");
+        if (lcdStatusText) lcdStatusText.textContent = "ОШИБКА: НЕТ ДОСТУПА К МИКРОФОНУ";
+      }
+    }
+
+    function stopMicrophone(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (!isMicActive) return;
+      isMicActive = false;
+      btnMic.classList.remove("active");
+
+      if (micGainNode && audioCtx) {
+        micGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        micGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      }
+
+      // Restore background siren and sounds volume back to 100%
+      if (sguSoundsGainNode && audioCtx) {
+        const now = audioCtx.currentTime;
+        const currentVal = sguSoundsGainNode.gain.value;
+        sguSoundsGainNode.gain.cancelScheduledValues(now);
+        sguSoundsGainNode.gain.setValueAtTime(currentVal, now);
+        sguSoundsGainNode.gain.linearRampToValueAtTime(1.0, now + 0.15);
+      }
+
+      if (lcdStatusText) {
+        lcdStatusText.textContent = isSirenActive ? "РЕЖИМ: ОСНОВНАЯ СИРЕНА" : "СГУ ДПС ГОТОВ К РАБОТЕ";
+      }
     }
 
     function bindButton(el, fn) {
@@ -417,6 +571,12 @@
     bindButton(btnSpeed, triggerSpeedSiren);
     bindButton(btnTwo, triggerTwoSiren);
     bindButton(btnCrackSiren, triggerCrackSiren);
+
+    btnMic.addEventListener("pointerdown", startMicrophone);
+    btnMic.addEventListener("pointerup", stopMicrophone);
+    btnMic.addEventListener("pointercancel", stopMicrophone);
+    btnMic.addEventListener("pointerleave", stopMicrophone);
+    btnMic.addEventListener("contextmenu", e => e.preventDefault());
 
     volRange.addEventListener("input", e => {
       const val = e.target.value;
