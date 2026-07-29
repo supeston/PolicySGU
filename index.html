@@ -561,11 +561,11 @@
         <span class="btn-sub-text">WAIL / YELP</span>
       </button>
 
-      <!-- Button 4: Двойная сирена -->
+      <!-- Button 4: Одиночная сирена -->
       <button class="sgu-btn btn-two interactive-control" id="btnTwo">
         <span class="btn-badge">04</span>
-        <span class="btn-main-text">ДВОЙНАЯ</span>
-        <span class="btn-sub-text">TWO SIREN</span>
+        <span class="btn-main-text">ОДИНОЧНАЯ</span>
+        <span class="btn-sub-text">SIREN ONE</span>
       </button>
     </div>
 
@@ -598,7 +598,7 @@
       crack: './crack.mp3',
       siren: './siren.mp3',
       speed_siren: './speed_siren.mp3',
-      two_siren: './two_siren.mp3'
+      sirenone: './sirenone.mp3'
     };
 
     let audioCtx = null;
@@ -750,18 +750,18 @@
       source.start(0);
     }
 
-    // Button 4: ДВОЙНАЯ СИРЕНА (Polyphonic Layered)
+    // Button 4: ОДИНОЧНАЯ СИРЕНА (Polyphonic Layered - sirenone.mp3)
     function triggerTwoSiren(e) {
       if (e) e.preventDefault();
       initAudioContext();
-      if (!audioBuffers.two_siren) return;
+      if (!audioBuffers.sirenone) return;
 
       const source = audioCtx.createBufferSource();
-      source.buffer = audioBuffers.two_siren;
+      source.buffer = audioBuffers.sirenone;
       source.connect(masterGainNode);
 
       btnTwo.classList.add('active');
-      lcdStatusText.textContent = 'РЕЖИМ: ДВОЙНАЯ СИРЕНА';
+      lcdStatusText.textContent = 'РЕЖИМ: ОДИНОЧНАЯ СИРЕНА';
 
       source.onended = () => {
         btnTwo.classList.remove('active');
