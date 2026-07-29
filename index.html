@@ -88,9 +88,7 @@
     .led.red.on { background: #f03; box-shadow: 0 0 14px #f03, inset 0 -1px 2px rgba(0, 0, 0, .4); }
     .led.blue.on { background: #08f; box-shadow: 0 0 14px #08f, inset 0 -1px 2px rgba(0, 0, 0, .4); }
     .lcd-screen { background: #04090f; border: 2px solid #1a2636; border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; box-shadow: inset 0 2px 10px rgba(0, 0, 0, .95); font-family: 'Courier New', monospace; }
-    .lcd-row-1 { display: flex; justify-content: space-between; color: #00e5ff; font-size: .85rem; font-weight: 700; text-shadow: 0 0 6px rgba(0, 229, 255, .6); margin-bottom: 4px; }
-    .lcd-row-2 { color: #768b9e; font-size: .75rem; font-weight: 700; letter-spacing: 1px; min-height: 1.2em; }
-    .lcd-row-2.active-alert { color: #ff1744; text-shadow: 0 0 8px rgba(255, 23, 68, .8); }
+    .lcd-row-1 { display: flex; justify-content: center; color: #00e5ff; font-size: .85rem; font-weight: 700; text-shadow: 0 0 6px rgba(0, 229, 255, .6); margin-bottom: 4px; }
     .progress-bar-bg { width: 100%; height: 4px; background: #0d1520; margin-top: 6px; border-radius: 2px; overflow: hidden; }
     .progress-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #d32f2f, #1976d2, #0f4); transition: width .2s ease; }
     .buttons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
@@ -142,10 +140,8 @@
     </div>
     <div class="lcd-screen">
       <div class="lcd-row-1">
-        <span>СТАТУС: ГОТОВ</span>
         <span id="lcdVolumeText">ГРОМКОСТЬ: 100%</span>
       </div>
-      <div class="lcd-row-2" id="lcdStatusText">ИНИЦИАЛИЗАЦИЯ...</div>
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
     </div>
     <div class="buttons-grid">
@@ -233,7 +229,7 @@
     async function preloadAudio() {
       const keys = Object.keys(AUDIO_FILES);
       let loadedCount = 0;
-      lcdStatusText.textContent = "ЗАГРУЗКА АУДИО БУФЕРОВ...";
+      if (lcdStatusText) lcdStatusText.textContent = "ЗАГРУЗКА АУДИО БУФЕРОВ...";
       const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
 
       for (const key of keys) {
@@ -245,11 +241,13 @@
           loadedCount++;
           const pct = Math.round((loadedCount / keys.length) * 100);
           progressBar.style.width = pct + "%";
-          lcdStatusText.textContent = `ЗАГРУЗКА: ${pct}% (${key}.mp3)`;
+          if (lcdStatusText) lcdStatusText.textContent = `ЗАГРУЗКА: ${pct}% (${key}.mp3)`;
         } catch (err) {
           console.error(err);
-          lcdStatusText.textContent = "ОШИБКА ЗАГРУЗКИ ФАЙЛОВ";
-          lcdStatusText.classList.add("active-alert");
+          if (lcdStatusText) {
+            lcdStatusText.textContent = "ОШИБКА ЗАГРУЗКИ ФАЙЛОВ";
+            lcdStatusText.classList.add("active-alert");
+          }
           if (window.location.protocol === "file:") {
             corsBox.style.display = "block";
           }
@@ -257,7 +255,7 @@
         }
       }
       tempCtx.close();
-      lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+      if (lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
       ledAudio.classList.add("on");
     }
 
@@ -310,7 +308,7 @@
       playSingleSoundWithFade("crack");
       btnCrack.classList.add("pulsing");
       setTimeout(() => btnCrack.classList.remove("pulsing"), 150);
-      lcdStatusText.textContent = "СИГНАЛ: КРЯКАЛКА";
+      if (lcdStatusText) lcdStatusText.textContent = "СИГНАЛ: КРЯКАЛКА";
     }
 
     function toggleSiren(e) {
@@ -338,7 +336,7 @@
         isSirenActive = false;
         btnSiren.classList.remove("active");
         ledSiren.classList.remove("on");
-        lcdStatusText.textContent = "СИРЕНА ВЫКЛЮЧЕНА";
+        if (lcdStatusText) lcdStatusText.textContent = "СИРЕНА ВЫКЛЮЧЕНА";
       } else {
         const now = audioCtx.currentTime;
         sirenGainNode = audioCtx.createGain();
@@ -356,7 +354,7 @@
         isSirenActive = true;
         btnSiren.classList.add("active");
         ledSiren.classList.add("on");
-        lcdStatusText.textContent = "РЕЖИМ: ОСНОВНАЯ СИРЕНА";
+        if (lcdStatusText) lcdStatusText.textContent = "РЕЖИМ: ОСНОВНАЯ СИРЕНА";
       }
       updateStrobeState();
     }
@@ -364,10 +362,10 @@
     function triggerSpeedSiren(e) {
       if (e && e.preventDefault(), initAudioContext(), !audioBuffers.speed_siren) return;
       btnSpeed.classList.add("active");
-      lcdStatusText.textContent = "РЕЖИМ: БЫСТРАЯ СИРЕНА";
+      if (lcdStatusText) lcdStatusText.textContent = "РЕЖИМ: БЫСТРАЯ СИРЕНА";
       playSingleSoundWithFade("speed_siren", () => {
         btnSpeed.classList.remove("active");
-        if (!isSirenActive) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+        if (!isSirenActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
       });
     }
 
@@ -380,7 +378,7 @@
       lastTwoSirenTime = t;
 
       btnTwo.classList.add("active");
-      lcdStatusText.textContent = "РЕЖИМ: ДВОЙНАЯ СИРЕНА";
+      if (lcdStatusText) lcdStatusText.textContent = "РЕЖИМ: ДВОЙНАЯ СИРЕНА";
 
       activeTwoSirenCount++;
       playSingleSoundWithFade("two_siren", () => {
@@ -388,7 +386,7 @@
         if (activeTwoSirenCount <= 0) {
           activeTwoSirenCount = 0;
           btnTwo.classList.remove("active");
-          if (!isSirenActive) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+          if (!isSirenActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
         }
       });
     }
@@ -402,7 +400,7 @@
       lastCrackSirenTime = t;
 
       btnCrackSiren.classList.add("active");
-      lcdStatusText.textContent = "РЕЖИМ: КРЯК-СИРЕНА";
+      if (lcdStatusText) lcdStatusText.textContent = "РЕЖИМ: КРЯК-СИРЕНА";
 
       activeCrackSirenCount++;
       playSingleSoundWithFade("cracksiren", () => {
@@ -410,7 +408,7 @@
         if (activeCrackSirenCount <= 0) {
           activeCrackSirenCount = 0;
           btnCrackSiren.classList.remove("active");
-          if (!isSirenActive) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+          if (!isSirenActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
         }
       });
     }
