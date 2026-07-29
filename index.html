@@ -434,11 +434,11 @@
       });
     }
 
-    // Optimal SGU Horn Loudspeaker Overdrive Saturation Curve
+    // Smooth Mobile & PC Compatible SGU Horn Saturation Curve
     function createBalancedSguDistortionCurve() {
       const samples = 44100;
       const curve = new Float32Array(samples);
-      const drive = 4.8;
+      const drive = 2.2; // Smooth soft-clipping for mobile microphone compatibility
       for (let i = 0; i < samples; i++) {
         const x = (i * 2) / samples - 1;
         curve[i] = Math.tanh(x * drive);
@@ -474,7 +474,7 @@
             audio: {
               echoCancellation: false,
               noiseSuppression: false,
-              autoGainControl: true
+              autoGainControl: false // Disables mobile OS AGC volume pumping
             }
           });
         }
@@ -482,38 +482,55 @@
         if (!micSourceNode && micStream) {
           micSourceNode = audioCtx.createMediaStreamSource(micStream);
 
-          const micDriveGain = audioCtx.createGain();
-          micDriveGain.gain.value = 1.8;
+          // 1. Input Peak Limiter (Protects mobile phone mics from hard digital clipping)
+          const inputLimiter = audioCtx.createDynamicsCompressor();
+          inputLimiter.threshold.value = -16;
+          inputLimiter.knee.value = 4;
+          inputLimiter.ratio.value = 10;
+          inputLimiter.attack.value = 0.001;
+          inputLimiter.release.value = 0.04;
 
+          // 2. Drive Gain (Unity 1.0)
+          const micDriveGain = audioCtx.createGain();
+          micDriveGain.gain.value = 1.0;
+
+          // 3. Smooth Horn Saturation Node
           micDistortion = audioCtx.createWaveShaper();
           micDistortion.curve = createBalancedSguDistortionCurve();
           micDistortion.oversample = "2x";
 
+          // 4. Highpass filter (cuts low rumble < 320Hz)
           micHighpass = audioCtx.createBiquadFilter();
           micHighpass.type = "highpass";
-          micHighpass.frequency.value = 380;
+          micHighpass.frequency.value = 320;
 
+          // 5. Lowpass filter (cuts high sizzle > 2800Hz)
           micLowpass = audioCtx.createBiquadFilter();
           micLowpass.type = "lowpass";
-          micLowpass.frequency.value = 2400;
+          micLowpass.frequency.value = 2800;
 
+          // 6. Horn Speaker Resonance Peak (~1300Hz, Q 1.5, +6.0dB)
           micPresence = audioCtx.createBiquadFilter();
           micPresence.type = "peaking";
-          micPresence.frequency.value = 1250;
-          micPresence.Q.value = 2.0;
-          micPresence.gain.value = 9.5;
+          micPresence.frequency.value = 1300;
+          micPresence.Q.value = 1.5;
+          micPresence.gain.value = 6.0;
 
+          // 7. Output Broadcast Compressor
           micCompressor = audioCtx.createDynamicsCompressor();
-          micCompressor.threshold.value = -22;
+          micCompressor.threshold.value = -20;
           micCompressor.knee.value = 6;
-          micCompressor.ratio.value = 5.5;
-          micCompressor.attack.value = 0.002;
-          micCompressor.release.value = 0.05;
+          micCompressor.ratio.value = 4.0;
+          micCompressor.attack.value = 0.003;
+          micCompressor.release.value = 0.06;
 
+          // 8. Tamed Output Mic Gain (1.8x - prevents phone speaker overloading)
           micGainNode = audioCtx.createGain();
-          micGainNode.gain.value = 3.8;
+          micGainNode.gain.value = 1.8;
 
-          micSourceNode.connect(micDriveGain);
+          // Connect Web Audio Nodes
+          micSourceNode.connect(inputLimiter);
+          inputLimiter.connect(micDriveGain);
           micDriveGain.connect(micDistortion);
           micDistortion.connect(micHighpass);
           micHighpass.connect(micLowpass);
@@ -523,7 +540,7 @@
           micGainNode.connect(masterGainNode);
         } else if (micGainNode) {
           micGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-          micGainNode.gain.setValueAtTime(3.8, audioCtx.currentTime);
+          micGainNode.gain.setValueAtTime(1.8, audioCtx.currentTime);
         }
 
         if (micStream) {
