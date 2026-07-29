@@ -108,6 +108,8 @@
     .btn-speed.active, .btn-speed:active { background: linear-gradient(145deg, #2563eb 0, #1d4ed8 100%); box-shadow: 0 2px 0 #172554, 0 0 22px rgba(37, 99, 235, .95), inset 0 2px 4px rgba(255, 255, 255, .6); }
     .btn-two { background: linear-gradient(145deg, #0284c7 0, #0f172a 100%); color: #fff; border-color: #38bdf8; box-shadow: 0 7px 0 #0c4a6e, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
     .btn-two.active, .btn-two:active { background: linear-gradient(145deg, #0369a1 0, #0284c7 100%); box-shadow: 0 2px 0 #0c4a6e, 0 0 22px rgba(56, 189, 248, .95), inset 0 2px 4px rgba(255, 255, 255, .6); }
+    .btn-cracksiren { background: linear-gradient(145deg, #7c3aed 0, #312e81 100%); color: #fff; border-color: #a78bfa; box-shadow: 0 7px 0 #1e1b4b, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); grid-column: span 2; }
+    .btn-cracksiren.active, .btn-cracksiren:active { background: linear-gradient(145deg, #6d28d9 0, #7c3aed 100%); box-shadow: 0 2px 0 #1e1b4b, 0 0 22px rgba(167, 139, 250, .95), inset 0 2px 4px rgba(255, 255, 255, .6); }
     .console-footer { background: #090c10; border: 2px solid #1e293b; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
     .volume-box { display: flex; align-items: center; gap: 12px; width: 100%; }
     .vol-text { font-size: .7rem; font-weight: 700; color: #94a3b8; letter-spacing: 1px; white-space: nowrap; }
@@ -167,6 +169,11 @@
         <span class="btn-main-text">ДВОЙНАЯ</span>
         <span class="btn-sub-text">TWO SIREN</span>
       </button>
+      <button class="sgu-btn btn-cracksiren interactive-control" id="btnCrackSiren">
+        <span class="btn-badge">05</span>
+        <span class="btn-main-text">КРЯК-СИРЕНА</span>
+        <span class="btn-sub-text">CRACK SIREN</span>
+      </button>
     </div>
     <div class="console-footer">
       <div class="volume-box">
@@ -183,7 +190,8 @@
       crack: "./crack.mp3",
       siren: "./siren.mp3",
       speed_siren: "./speed_siren.mp3",
-      two_siren: "./two_siren.mp3"
+      two_siren: "./two_siren.mp3",
+      cracksiren: "./cracksiren.mp3"
     };
 
     let audioCtx = null;
@@ -194,6 +202,7 @@
     let sirenGainNode = null;
     let isSirenActive = false;
     let lastTwoSirenTime = 0;
+    let lastCrackSirenTime = 0;
 
     const lcdStatusText = document.getElementById("lcdStatusText");
     const progressBar = document.getElementById("progressBar");
@@ -205,6 +214,7 @@
     const btnSiren = document.getElementById("btnSiren");
     const btnSpeed = document.getElementById("btnSpeed");
     const btnTwo = document.getElementById("btnTwo");
+    const btnCrackSiren = document.getElementById("btnCrackSiren");
     const volRange = document.getElementById("volRange");
 
     function initAudioContext() {
@@ -383,6 +393,28 @@
       });
     }
 
+    let activeCrackSirenCount = 0;
+
+    function triggerCrackSiren(e) {
+      if (e && e.preventDefault(), initAudioContext(), !audioBuffers.cracksiren) return;
+      const t = Date.now();
+      if (t - lastCrackSirenTime < 600) return;
+      lastCrackSirenTime = t;
+
+      btnCrackSiren.classList.add("active");
+      lcdStatusText.textContent = "РЕЖИМ: КРЯК-СИРЕНА";
+
+      activeCrackSirenCount++;
+      playSingleSoundWithFade("cracksiren", () => {
+        activeCrackSirenCount--;
+        if (activeCrackSirenCount <= 0) {
+          activeCrackSirenCount = 0;
+          btnCrackSiren.classList.remove("active");
+          if (!isSirenActive) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+        }
+      });
+    }
+
     function bindButton(el, fn) {
       el.addEventListener("pointerdown", fn);
     }
@@ -391,6 +423,7 @@
     bindButton(btnSiren, toggleSiren);
     bindButton(btnSpeed, triggerSpeedSiren);
     bindButton(btnTwo, triggerTwoSiren);
+    bindButton(btnCrackSiren, triggerCrackSiren);
 
     volRange.addEventListener("input", e => {
       const val = e.target.value;
