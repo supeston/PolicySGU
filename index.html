@@ -361,7 +361,7 @@
       });
     }
 
-    let activeTwoSirenInstance = null;
+    let activeTwoSirenCount = 0;
 
     function triggerTwoSiren(e) {
       if (e && e.preventDefault(), initAudioContext(), !audioBuffers.two_siren) return;
@@ -369,27 +369,18 @@
       if (t - lastTwoSirenTime < 500) return;
       lastTwoSirenTime = t;
 
-      if (activeTwoSirenInstance) {
-        try {
-          const now = audioCtx.currentTime;
-          activeTwoSirenInstance.gainNode.gain.setValueAtTime(activeTwoSirenInstance.gainNode.gain.value, now);
-          activeTwoSirenInstance.gainNode.gain.linearRampToValueAtTime(0.0001, now + 0.02);
-          activeTwoSirenInstance.source.stop(now + 0.02);
-        } catch (err) {}
-        activeTwoSirenInstance = null;
-      }
-
       btnTwo.classList.add("active");
       lcdStatusText.textContent = "РЕЖИМ: ДВОЙНАЯ СИРЕНА";
 
-      const instance = playSingleSoundWithFade("two_siren", () => {
-        if (activeTwoSirenInstance === instance) {
-          activeTwoSirenInstance = null;
+      activeTwoSirenCount++;
+      playSingleSoundWithFade("two_siren", () => {
+        activeTwoSirenCount--;
+        if (activeTwoSirenCount <= 0) {
+          activeTwoSirenCount = 0;
           btnTwo.classList.remove("active");
           if (!isSirenActive) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
         }
       });
-      activeTwoSirenInstance = instance;
     }
 
     function bindButton(el, fn) {
