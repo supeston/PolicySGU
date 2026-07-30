@@ -15,7 +15,7 @@ const CATEGORIES = [
     id: "mems",
     title: "Мемы",
     items: [
-      { key: "koch_v1", label: "Кох", file: "./sounds/Mems/koch_v1.mp3", className: "tone-purple", volume: 4 },
+      { key: "koch_v1", label: "Коч", file: "./sounds/Mems/koch_v1.mp3", className: "tone-purple", volume: 4 },
       { key: "bratan", label: "Братан", file: "./sounds/Mems/bratan.mp3", className: "tone-pink", volume: 4 },
       { key: "golda", label: "Голда", file: "./sounds/Mems/golda.mp3", className: "tone-indigo", volume: 1.5 }
     ]
