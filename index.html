@@ -212,12 +212,59 @@
       background: #8b5cf6;
     }
 
-    .category-content.switching {
-      animation: categoryIn 220ms ease both;
+    .category-content {
+      position: relative;
+      overflow: hidden;
+      transition: height 280ms ease;
     }
 
-    @keyframes categoryIn {
-      from { opacity: .2; transform: translateX(var(--slide-direction, 18px)); }
+    .category-outgoing {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    .category-incoming {
+      position: relative;
+      z-index: 1;
+    }
+
+    .slide-out-left { animation: slideOutLeft 320ms cubic-bezier(.4, 0, .2, 1) both; }
+    .slide-out-right { animation: slideOutRight 320ms cubic-bezier(.4, 0, .2, 1) both; }
+    .slide-in-right { animation: slideInRight 320ms cubic-bezier(.22, 1, .36, 1) both; }
+    .slide-in-left { animation: slideInLeft 320ms cubic-bezier(.22, 1, .36, 1) both; }
+    .title-in-right { animation: titleInRight 320ms cubic-bezier(.22, 1, .36, 1) both; }
+    .title-in-left { animation: titleInLeft 320ms cubic-bezier(.22, 1, .36, 1) both; }
+
+    @keyframes slideOutLeft {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(-105%); }
+    }
+
+    @keyframes slideOutRight {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(105%); }
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(105%); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-105%); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes titleInRight {
+      from { opacity: 0; transform: translateX(28px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes titleInLeft {
+      from { opacity: 0; transform: translateX(-28px); }
       to { opacity: 1; transform: translateX(0); }
     }
 
@@ -229,12 +276,6 @@
       letter-spacing: .08em;
       text-align: center;
       text-transform: uppercase;
-    }
-
-    .tone-gold {
-      background: linear-gradient(145deg, #ca8a04, #713f12);
-      border-color: #fde047;
-      box-shadow: 0 7px 0 #422006, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
     }
 
     .tone-purple {

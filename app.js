@@ -8,7 +8,6 @@ const CATEGORIES = [
       { key: "speed_siren", label: "Быстрая сирена", file: "./sounds/DPS/speed_siren.mp3", className: "btn-speed" },
       { key: "two_siren", label: "Двойная сирена", file: "./sounds/DPS/two_siren.mp3", className: "btn-two" },
       { key: "cracksiren", label: "Кряк-сирена", file: "./sounds/DPS/cracksiren.mp3", className: "btn-cracksiren" },
-      { key: "gold", label: "Золото", file: "./sounds/DPS/gold.mp3", className: "tone-gold" },
       { key: "microphone", label: "Микрофон", className: "btn-mic", microphone: true }
     ]
   },
@@ -56,6 +55,7 @@ let isMicActive = false;
 let swipeStartX = null;
 let swipeStartY = null;
 let wheelLocked = false;
+let isCategorySwitching = false;
 
 const categoryBrowser = document.getElementById("categoryBrowser");
 const categoryTitle = document.getElementById("categoryTitle");
@@ -78,8 +78,11 @@ function getSoundButton(key) {
   return buttonsGrid.querySelector(`[data-sound-key="${key}"]`);
 }
 
-function renderCategory(direction = 1) {
+function renderCategory(direction = 1, animate = false) {
   const category = getCurrentCategory();
+  const outgoingGrid = animate ? buttonsGrid.cloneNode(true) : null;
+  const outgoingHeight = animate ? buttonsGrid.offsetHeight : 0;
+
   categoryTitle.textContent = category.title;
   buttonsGrid.setAttribute("aria-label", `Звуки категории ${category.title}`);
   buttonsGrid.innerHTML = category.items.map((item, index) => {
@@ -108,16 +111,40 @@ function renderCategory(direction = 1) {
     `<span class="category-dot${index === activeCategoryIndex ? " active" : ""}"></span>`
   ).join("");
 
-  categoryContent.style.setProperty("--slide-direction", direction > 0 ? "18px" : "-18px");
-  categoryContent.classList.remove("switching");
-  requestAnimationFrame(() => categoryContent.classList.add("switching"));
+  if (!animate || !outgoingGrid) return;
+
+  const incomingHeight = buttonsGrid.offsetHeight;
+  categoryContent.style.height = `${Math.max(outgoingHeight, incomingHeight)}px`;
+
+  outgoingGrid.removeAttribute("id");
+  outgoingGrid.setAttribute("aria-hidden", "true");
+  outgoingGrid.classList.add(
+    "category-outgoing",
+    direction > 0 ? "slide-out-left" : "slide-out-right"
+  );
+  buttonsGrid.classList.add(
+    "category-incoming",
+    direction > 0 ? "slide-in-right" : "slide-in-left"
+  );
+  categoryTitle.classList.add(direction > 0 ? "title-in-right" : "title-in-left");
+  categoryContent.append(outgoingGrid);
+
+  setTimeout(() => {
+    outgoingGrid.remove();
+    buttonsGrid.classList.remove("category-incoming", "slide-in-right", "slide-in-left");
+    categoryTitle.classList.remove("title-in-right", "title-in-left");
+    categoryContent.style.height = "";
+    isCategorySwitching = false;
+  }, 340);
 }
 
 function switchCategory(direction) {
+  if (isCategorySwitching) return;
+  isCategorySwitching = true;
   activeCategoryIndex = (
     activeCategoryIndex + direction + CATEGORIES.length
   ) % CATEGORIES.length;
-  renderCategory(direction);
+  renderCategory(direction, true);
 }
 
 function initAudioContext() {
