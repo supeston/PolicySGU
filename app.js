@@ -37,8 +37,20 @@ const AUDIO_ITEMS = CATEGORIES
   .filter(item => item.file);
 
 const MEM_SOUND_KEYS = new Set(CATEGORIES[1].items.map(item => item.key));
+const REPLAY_GATED_KEYS = new Set([
+  "speed_siren",
+  "two_siren",
+  "cracksiren",
+  "golda",
+  "korabel",
+  "fura",
+  "poezd",
+  "car"
+]);
+const REPLAY_UNLOCK_RATIO = 0.7;
 const audioBuffers = {};
 const activeSoundCounts = new Map();
+const lastSoundStartTimes = new Map();
 
 let activeCategoryIndex = 0;
 let audioCtx = null;
@@ -61,6 +73,7 @@ let wheelLocked = false;
 let isCategorySwitching = false;
 
 const categoryBrowser = document.getElementById("categoryBrowser");
+const gestureSurface = document.body;
 const categoryTitle = document.getElementById("categoryTitle");
 const categoryDots = document.getElementById("categoryDots");
 const categoryContent = document.getElementById("categoryContent");
@@ -218,10 +231,22 @@ function updateSoundButton(key) {
 function playOneShot(item) {
   if (!audioCtx || !audioBuffers[item.key]) return;
 
-  const source = audioCtx.createBufferSource();
-  const gainNode = audioCtx.createGain();
   const now = audioCtx.currentTime;
   const duration = audioBuffers[item.key].duration;
+
+  if (REPLAY_GATED_KEYS.has(item.key)) {
+    const lastStartedAt = lastSoundStartTimes.get(item.key);
+    if (
+      lastStartedAt !== undefined
+      && now - lastStartedAt < duration * REPLAY_UNLOCK_RATIO
+    ) {
+      return;
+    }
+    lastSoundStartTimes.set(item.key, now);
+  }
+
+  const source = audioCtx.createBufferSource();
+  const gainNode = audioCtx.createGain();
   const fadeIn = 0.015;
   const fadeOut = MEM_SOUND_KEYS.has(item.key) ? 0.2 : 0.18;
   const targetVolume = item.volume || 1;
@@ -379,7 +404,7 @@ window.addEventListener("pointercancel", event => {
 });
 
 function beginSwipe(event) {
-  if (event.target.closest("input")) return;
+  if (event.target.closest?.("input")) return;
   const point = event.touches?.[0] || event;
   swipeStartX = point.clientX;
   swipeStartY = point.clientY;
@@ -418,25 +443,25 @@ function finishSwipe(event) {
   }
 }
 
-categoryBrowser.addEventListener("click", event => {
+gestureSurface.addEventListener("click", event => {
   if (performance.now() < suppressClickUntil) {
     event.preventDefault();
     event.stopPropagation();
   }
 }, true);
 
-categoryBrowser.addEventListener("pointerdown", beginSwipe);
-categoryBrowser.addEventListener("pointermove", trackSwipe);
-categoryBrowser.addEventListener("pointerup", finishSwipe);
-categoryBrowser.addEventListener("mousedown", beginSwipe);
-categoryBrowser.addEventListener("mousemove", trackSwipe);
-categoryBrowser.addEventListener("mouseup", finishSwipe);
-categoryBrowser.addEventListener("touchstart", beginSwipe, { passive: true });
-categoryBrowser.addEventListener("touchmove", trackSwipe, { passive: false });
-categoryBrowser.addEventListener("touchend", finishSwipe, { passive: true });
+gestureSurface.addEventListener("pointerdown", beginSwipe);
+gestureSurface.addEventListener("pointermove", trackSwipe);
+gestureSurface.addEventListener("pointerup", finishSwipe);
+gestureSurface.addEventListener("mousedown", beginSwipe);
+gestureSurface.addEventListener("mousemove", trackSwipe);
+gestureSurface.addEventListener("mouseup", finishSwipe);
+gestureSurface.addEventListener("touchstart", beginSwipe, { passive: true });
+gestureSurface.addEventListener("touchmove", trackSwipe, { passive: false });
+gestureSurface.addEventListener("touchend", finishSwipe, { passive: true });
 
-categoryBrowser.addEventListener("wheel", event => {
-  if (event.target.closest("input") || wheelLocked) return;
+gestureSurface.addEventListener("wheel", event => {
+  if (event.target.closest?.("input") || wheelLocked) return;
   const primaryDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY)
     ? event.deltaX
     : event.deltaY;
