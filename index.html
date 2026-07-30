@@ -249,7 +249,87 @@
     let currentSecretKey = null;
     let currentSecretStartTime = 0;
     let currentSecretDuration = 0;
-    let pendingSecretQueue = [];
+    let nextMandatorySound = null;
+
+    function playSecretBuffer(bufferKey, onEndedCallback) {
+      if (!audioCtx || !audioBuffers[bufferKey]) return;
+
+      if (currentSecretSource) {
+        try { currentSecretSource.stop(); } catch (e) {}
+        try { currentSecretSource.disconnect(); } catch (e) {}
+        currentSecretSource = null;
+      }
+      if (currentSecretGain) {
+        try { currentSecretGain.disconnect(); } catch (e) {}
+        currentSecretGain = null;
+      }
+
+      const sound = playSingleSoundWithFade(bufferKey, () => {
+        currentSecretSource = null;
+        currentSecretGain = null;
+        currentSecretKey = null;
+        currentSecretStartTime = 0;
+        currentSecretDuration = 0;
+        btnSecret.classList.remove("active");
+        if (!isSirenActive && !isMicActive && lcdStatusText) {
+          lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+        }
+        if (onEndedCallback) onEndedCallback();
+      });
+
+      if (sound) {
+        currentSecretSource = sound.source;
+        currentSecretGain = sound.gainNode;
+        currentSecretKey = bufferKey;
+        currentSecretStartTime = audioCtx.currentTime;
+        currentSecretDuration = audioBuffers[bufferKey].duration;
+      }
+    }
+
+    function triggerSecretSignal(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      initAudioContext();
+
+      const now = audioCtx.currentTime;
+
+      if (currentSecretSource && currentSecretDuration > 0) {
+        const elapsed = now - currentSecretStartTime;
+        if (elapsed < currentSecretDuration * 0.7) {
+          return;
+        }
+      }
+
+      let soundToPlay = null;
+
+      if (nextMandatorySound) {
+        soundToPlay = nextMandatorySound;
+        nextMandatorySound = null;
+      } else {
+        const options = ["koch", "golda", "bratan"];
+        const choice = options[Math.floor(Math.random() * options.length)];
+        if (choice === "koch") {
+          soundToPlay = "koch_v1";
+          nextMandatorySound = "koch_v2";
+        } else if (choice === "golda") {
+          soundToPlay = "golda";
+        } else {
+          soundToPlay = "bratan";
+        }
+      }
+
+      if (lcdStatusText) {
+        const names = {
+          koch_v1: "СЕКРЕТНЫЙ СИГНАЛ: KOCH V1",
+          koch_v2: "СЕКРЕТНЫЙ СИГНАЛ: KOCH V2",
+          golda: "СЕКРЕТНЫЙ СИГНАЛ: ГОЛДА",
+          bratan: "СЕКРЕТНЫЙ СИГНАЛ: БРАТАН"
+        };
+        lcdStatusText.textContent = names[soundToPlay] || "СЕКРЕТНЫЙ СИГНАЛ";
+      }
+
+      btnSecret.classList.add("active");
+      playSecretBuffer(soundToPlay);
+    }
 
     function initAudioContext() {
       if (!audioCtx) {
@@ -602,100 +682,7 @@
       el.addEventListener("pointerdown", fn);
     }
 
-    function playSecretBuffer(bufferKey, onEndedCallback) {
-      if (!audioCtx || !audioBuffers[bufferKey]) return;
 
-      if (currentSecretSource) {
-        try { currentSecretSource.stop(); } catch (e) {}
-        try { currentSecretSource.disconnect(); } catch (e) {}
-        currentSecretSource = null;
-      }
-      if (currentSecretGain) {
-        try { currentSecretGain.disconnect(); } catch (e) {}
-        currentSecretGain = null;
-      }
-
-      const sound = playSingleSoundWithFade(bufferKey, () => {
-        currentSecretSource = null;
-        currentSecretGain = null;
-        currentSecretKey = null;
-        currentSecretStartTime = 0;
-        currentSecretDuration = 0;
-        if (onEndedCallback) onEndedCallback();
-      });
-
-      if (sound) {
-        currentSecretSource = sound.source;
-        currentSecretGain = sound.gainNode;
-        currentSecretKey = bufferKey;
-        currentSecretStartTime = audioCtx.currentTime;
-        currentSecretDuration = audioBuffers[bufferKey].duration;
-      }
-    }
-
-    function triggerSecretSignal(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      initAudioContext();
-
-      const now = audioCtx.currentTime;
-
-      if (currentSecretSource && currentSecretDuration > 0) {
-        const elapsed = now - currentSecretStartTime;
-        if (currentSecretKey === "koch_v1") {
-          return;
-        }
-        if (elapsed < currentSecretDuration * 0.7) {
-          return;
-        }
-      }
-
-      pendingSecretQueue = [];
-
-      const options = [
-        ["koch_v1", "koch_v2"],
-        ["golda"],
-        ["bratan"]
-      ];
-
-      const chosenOption = options[Math.floor(Math.random() * options.length)];
-      pendingSecretQueue = [...chosenOption];
-
-      btnSecret.classList.add("active");
-      playNextInSecretQueue();
-    }
-
-    function playNextInSecretQueue() {
-      if (pendingSecretQueue.length === 0) {
-        btnSecret.classList.remove("active");
-        if (!isSirenActive && !isMicActive && lcdStatusText) {
-          lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
-        }
-        return;
-      }
-
-      const nextKey = pendingSecretQueue.shift();
-
-      if (lcdStatusText) {
-        const names = {
-          koch_v1: "СЕКРЕТНЫЙ СИГНАЛ: KOCH V1",
-          koch_v2: "СЕКРЕТНЫЙ СИГНАЛ: KOCH V2",
-          golda: "СЕКРЕТНЫЙ СИГНАЛ: ГОЛДА",
-          bratan: "СЕКРЕТНЫЙ СИГНАЛ: БРАТАН"
-        };
-        lcdStatusText.textContent = names[nextKey] || "СЕКРЕТНЫЙ СИГНАЛ";
-      }
-
-      playSecretBuffer(nextKey, () => {
-        if (pendingSecretQueue.length > 0) {
-          playNextInSecretQueue();
-        } else {
-          btnSecret.classList.remove("active");
-          if (!isSirenActive && !isMicActive && lcdStatusText) {
-            lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
-          }
-        }
-      });
-    }
 
     bindButton(btnCrack, triggerCrack);
     bindButton(btnSiren, toggleSiren);
