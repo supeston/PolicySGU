@@ -202,7 +202,6 @@
       two_siren: "./two_siren.mp3",
       cracksiren: "./cracksiren.mp3",
       koch_v1: "./koch_v1.mp3",
-      koch_v2: "./koch_v2.mp3",
       bratan: "./bratan.mp3",
       golda: "./golda.mp3"
     };
@@ -213,10 +212,9 @@
       speed_siren: 1.0,
       two_siren: 1.0,
       cracksiren: 1.0,
-      koch_v1: 3.0,
-      koch_v2: 3.0,
-      bratan: 3.0,
-      golda: 1.5
+      koch_v1: 4.0,
+      bratan: 4.0,
+      golda: 2.0
     };
 
     let audioCtx = null;
@@ -261,7 +259,6 @@
     let currentSecretKey = null;
     let currentSecretStartTime = 0;
     let currentSecretDuration = 0;
-    let nextMandatorySound = null;
 
     function playSecretBuffer(bufferKey, onEndedCallback) {
       if (!audioCtx || !audioBuffers[bufferKey]) return;
@@ -311,28 +308,12 @@
         }
       }
 
-      let soundToPlay = null;
-
-      if (nextMandatorySound) {
-        soundToPlay = nextMandatorySound;
-        nextMandatorySound = null;
-      } else {
-        const options = ["koch", "golda", "bratan"];
-        const choice = options[Math.floor(Math.random() * options.length)];
-        if (choice === "koch") {
-          soundToPlay = "koch_v1";
-          nextMandatorySound = "koch_v2";
-        } else if (choice === "golda") {
-          soundToPlay = "golda";
-        } else {
-          soundToPlay = "bratan";
-        }
-      }
+      const options = ["koch_v1", "golda", "bratan"];
+      const soundToPlay = options[Math.floor(Math.random() * options.length)];
 
       if (lcdStatusText) {
         const names = {
-          koch_v1: "СЕКРЕТНЫЙ СИГНАЛ: KOCH V1",
-          koch_v2: "СЕКРЕТНЫЙ СИГНАЛ: KOCH V2",
+          koch_v1: "СЕКРЕТНЫЙ СИГНАЛ: KOCH",
           golda: "СЕКРЕТНЫЙ СИГНАЛ: ГОЛДА",
           bratan: "СЕКРЕТНЫЙ СИГНАЛ: БРАТАН"
         };
