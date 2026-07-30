@@ -54,6 +54,9 @@ let micGainNode = null;
 let isMicActive = false;
 let swipeStartX = null;
 let swipeStartY = null;
+let swipeMoved = false;
+let suppressClickUntil = 0;
+let microphoneStartTimer = null;
 let wheelLocked = false;
 let isCategorySwitching = false;
 
@@ -353,17 +356,47 @@ buttonsGrid.addEventListener("click", event => {
 
 buttonsGrid.addEventListener("pointerdown", event => {
   const button = event.target.closest('[data-microphone="true"]');
-  if (button) startMicrophone(event);
+  if (!button) return;
+  clearTimeout(microphoneStartTimer);
+  microphoneStartTimer = setTimeout(() => {
+    microphoneStartTimer = null;
+    if (!swipeMoved) startMicrophone(event);
+  }, 140);
 });
 
-window.addEventListener("pointerup", stopMicrophone);
-window.addEventListener("pointercancel", stopMicrophone);
+function cancelMicrophoneStart() {
+  clearTimeout(microphoneStartTimer);
+  microphoneStartTimer = null;
+}
+
+window.addEventListener("pointerup", event => {
+  cancelMicrophoneStart();
+  stopMicrophone(event);
+});
+window.addEventListener("pointercancel", event => {
+  cancelMicrophoneStart();
+  stopMicrophone(event);
+});
 
 function beginSwipe(event) {
-  if (event.target.closest("button, input")) return;
+  if (event.target.closest("input")) return;
   const point = event.touches?.[0] || event;
   swipeStartX = point.clientX;
   swipeStartY = point.clientY;
+  swipeMoved = false;
+}
+
+function trackSwipe(event) {
+  if (swipeStartX === null || swipeStartY === null) return;
+  const point = event.touches?.[0] || event;
+  const deltaX = point.clientX - swipeStartX;
+  const deltaY = point.clientY - swipeStartY;
+
+  if (Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY)) {
+    swipeMoved = true;
+    cancelMicrophoneStart();
+    if (event.cancelable) event.preventDefault();
+  }
 }
 
 function finishSwipe(event) {
@@ -374,16 +407,32 @@ function finishSwipe(event) {
   swipeStartX = null;
   swipeStartY = null;
 
+  if (swipeMoved) {
+    suppressClickUntil = performance.now() + 450;
+    cancelMicrophoneStart();
+    if (event.cancelable) event.preventDefault();
+  }
+
   if (Math.abs(deltaX) > 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
     switchCategory(deltaX < 0 ? 1 : -1);
   }
 }
 
+categoryBrowser.addEventListener("click", event => {
+  if (performance.now() < suppressClickUntil) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}, true);
+
 categoryBrowser.addEventListener("pointerdown", beginSwipe);
+categoryBrowser.addEventListener("pointermove", trackSwipe);
 categoryBrowser.addEventListener("pointerup", finishSwipe);
 categoryBrowser.addEventListener("mousedown", beginSwipe);
+categoryBrowser.addEventListener("mousemove", trackSwipe);
 categoryBrowser.addEventListener("mouseup", finishSwipe);
 categoryBrowser.addEventListener("touchstart", beginSwipe, { passive: true });
+categoryBrowser.addEventListener("touchmove", trackSwipe, { passive: false });
 categoryBrowser.addEventListener("touchend", finishSwipe, { passive: true });
 
 categoryBrowser.addEventListener("wheel", event => {
