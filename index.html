@@ -207,6 +207,18 @@
       golda: "./golda.mp3"
     };
 
+    const SOUND_VOLUMES = {
+      crack: 1.0,
+      siren: 1.0,
+      speed_siren: 1.0,
+      two_siren: 1.0,
+      cracksiren: 1.0,
+      koch_v1: 3.0,
+      koch_v2: 3.0,
+      bratan: 3.0,
+      golda: 1.5
+    };
+
     let audioCtx = null;
     let masterGainNode = null;
     let sguSoundsGainNode = null; // Bus for sirens and sounds (allows ducking when speaking)
@@ -402,11 +414,13 @@
       const fadeIn = 0.015;
       const fadeOut = 0.18;
 
+      const targetVol = SOUND_VOLUMES[bufferKey] || 1.0;
+
       gainNode.gain.setValueAtTime(0.0001, now);
-      gainNode.gain.linearRampToValueAtTime(1.0, now + fadeIn);
+      gainNode.gain.linearRampToValueAtTime(targetVol, now + fadeIn);
 
       if (duration > fadeIn + fadeOut) {
-        gainNode.gain.setValueAtTime(1.0, now + duration - fadeOut);
+        gainNode.gain.setValueAtTime(targetVol, now + duration - fadeOut);
         gainNode.gain.linearRampToValueAtTime(0.0001, now + duration);
       }
 
