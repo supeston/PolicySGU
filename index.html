@@ -2,173 +2,372 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-  <title>Пульт СГУ ДПС</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#07090d">
+  <title>Звуковая панель</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+    :root {
+      color-scheme: dark;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
-      background-color: #050608;
-      background-image: radial-gradient(ellipse at 50% 20%, rgba(13, 71, 161, .25) 0, rgba(0, 0, 0, .95) 70%), repeating-linear-gradient(0deg, rgba(0, 0, 0, .5) 0, rgba(0, 0, 0, .5) 1px, transparent 1px, transparent 3px);
-      color: #fff;
-      font-family: 'Arial Black', Impact, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 50% 0, rgba(44, 63, 94, .22), transparent 42%),
+        #07090d;
       overflow-x: hidden;
       touch-action: manipulation;
     }
-    .strobe-bar {
-      width: 100%;
-      max-width: 460px;
-      height: 16px;
-      border-radius: 8px 8px 0 0;
-      display: flex;
-      overflow: hidden;
-      box-shadow: 0 0 20px rgba(0, 0, 0, .9);
-      border: 2px solid #1a202c;
-      border-bottom: none;
+
+    .sound-panel {
+      width: min(100%, 520px);
     }
-    .strobe-left { flex: 1; background: #7f1d1d; transition: background .1s ease; }
-    .strobe-right { flex: 1; background: #1e3a8a; transition: background .1s ease; }
-    body.strobe-active .strobe-left { animation: flashRed .4s infinite alternate; }
-    body.strobe-active .strobe-right { animation: flashBlue .4s infinite alternate-reverse; }
-    @keyframes flashRed { 0% { background: red; box-shadow: 0 0 25px red; } 100% { background: #500000; box-shadow: none; } }
-    @keyframes flashBlue { 0% { background: #05f; box-shadow: 0 0 25px #05f; } 100% { background: #015; box-shadow: none; } }
-    .sgu-console {
-      width: 100%;
-      max-width: 460px;
-      background: #0f1218;
-      background-image: linear-gradient(180deg, #181d26 0, #0b0d12 100%);
-      border: 3px solid #2a3242;
-      border-radius: 0 0 16px 16px;
-      padding: 20px 16px;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, .95), inset 0 2px 3px rgba(255, 255, 255, .15), inset 0 -3px 8px rgba(0, 0, 0, .9);
+
+    .buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .sound-btn {
       position: relative;
+      min-height: 112px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 12px;
+      border: 2px solid transparent;
+      border-radius: 14px;
+      outline: 0;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      transition: transform 70ms ease, box-shadow 100ms ease, filter 140ms ease;
     }
-    .screw {
+
+    .sound-btn:active {
+      transform: translateY(4px) scale(.975);
+    }
+
+    .sound-btn:focus-visible {
+      outline: 3px solid rgba(255, 255, 255, .92);
+      outline-offset: 4px;
+    }
+
+    .btn-number {
       position: absolute;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #4b5563, #1f2937);
-      border: 1px solid #111827;
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, .3);
+      top: 9px;
+      left: 11px;
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .1em;
+      opacity: .72;
     }
-    .screw::after { content: ''; position: absolute; top: 4px; left: 1px; width: 8px; height: 2px; background: #111827; }
-    .screw-tl { top: 8px; left: 8px; }
-    .screw-tr { top: 8px; right: 8px; }
-    .screw-bl { bottom: 8px; left: 8px; }
-    .screw-br { bottom: 8px; right: 8px; }
-    .dps-header {
-      background: linear-gradient(90deg, #0d47a1 0, #1565c0 50%, #0d47a1 100%);
-      border: 2px solid #1e88e5;
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-bottom: 16px;
+
+    .btn-label {
+      font-size: clamp(.9rem, 3.6vw, 1.12rem);
+      font-weight: 900;
+      line-height: 1.12;
+      letter-spacing: .07em;
+      text-align: center;
+      text-transform: uppercase;
+      text-shadow: 0 2px 3px rgba(0, 0, 0, .72);
+    }
+
+    .btn-crack {
+      background: linear-gradient(145deg, #d97706, #78350f);
+      border-color: #fbbf24;
+      box-shadow: 0 7px 0 #451a03, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .38);
+    }
+
+    .btn-crack.pulsing,
+    .btn-crack:active {
+      background: linear-gradient(145deg, #f59e0b, #b45309);
+      box-shadow: 0 2px 0 #451a03, 0 5px 10px rgba(0, 0, 0, .5), inset 0 1px 3px rgba(255, 255, 255, .55);
+    }
+
+    .btn-siren {
+      background: linear-gradient(145deg, #b91c1c, #651616);
+      border-color: #ef4444;
+      box-shadow: 0 7px 0 #450a0a, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
+    }
+
+    .btn-siren.active {
+      background: linear-gradient(145deg, #ef2b2b, #991b1b);
+      border-color: #fca5a5;
+      box-shadow: 0 2px 0 #450a0a, 0 0 26px rgba(239, 68, 68, .72), inset 0 2px 4px rgba(255, 255, 255, .5);
+      animation: activePulse .65s infinite alternate;
+    }
+
+    .btn-speed {
+      background: linear-gradient(145deg, #1d4ed8, #172554);
+      border-color: #60a5fa;
+      box-shadow: 0 7px 0 #0f183a, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
+    }
+
+    .btn-speed.active,
+    .btn-speed:active {
+      background: linear-gradient(145deg, #2563eb, #1d4ed8);
+      box-shadow: 0 2px 0 #172554, 0 0 24px rgba(37, 99, 235, .72), inset 0 2px 4px rgba(255, 255, 255, .5);
+    }
+
+    .btn-two {
+      background: linear-gradient(145deg, #0284c7, #0f172a);
+      border-color: #38bdf8;
+      box-shadow: 0 7px 0 #0c4a6e, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
+    }
+
+    .btn-two.active,
+    .btn-two:active {
+      background: linear-gradient(145deg, #0ea5e9, #0369a1);
+      box-shadow: 0 2px 0 #0c4a6e, 0 0 24px rgba(56, 189, 248, .7), inset 0 2px 4px rgba(255, 255, 255, .5);
+    }
+
+    .btn-cracksiren {
+      background: linear-gradient(145deg, #15568f, #081d36);
+      border-color: #38bdf8;
+      box-shadow: 0 7px 0 #040e1a, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
+    }
+
+    .btn-cracksiren.active,
+    .btn-cracksiren:active {
+      background: linear-gradient(145deg, #0284c7, #0f3661);
+      box-shadow: 0 2px 0 #040e1a, 0 0 24px rgba(56, 189, 248, .7), inset 0 2px 4px rgba(255, 255, 255, .5);
+    }
+
+    .btn-mic {
+      background: linear-gradient(145deg, #067354, #022c22);
+      border-color: #10b981;
+      box-shadow: 0 7px 0 #06281e, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
+    }
+
+    .btn-mic.active,
+    .btn-mic:active {
+      background: linear-gradient(145deg, #059669, #047857);
+      border-color: #6ee7b7;
+      box-shadow: 0 2px 0 #06281e, 0 0 25px rgba(16, 185, 129, .68), inset 0 2px 4px rgba(255, 255, 255, .5);
+      animation: activePulse .55s infinite alternate;
+    }
+
+    .btn-secret {
+      grid-column: 1 / -1;
+      background: linear-gradient(145deg, #6b21a8, #3b0764);
+      border-color: #c084fc;
+      box-shadow: 0 7px 0 #2e1065, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
+    }
+
+    .btn-secret.active,
+    .btn-secret:active {
+      background: linear-gradient(145deg, #9333ea, #581c87);
+      border-color: #e9d5ff;
+      box-shadow: 0 2px 0 #2e1065, 0 0 26px rgba(192, 132, 252, .7), inset 0 2px 4px rgba(255, 255, 255, .5);
+      animation: activePulse .55s infinite alternate;
+    }
+
+    @keyframes activePulse {
+      from { filter: brightness(1); }
+      to { filter: brightness(1.28); }
+    }
+
+    .volume-control {
+      margin-top: 26px;
+      padding: 18px 20px 20px;
+      border: 1px solid #293143;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(26, 31, 41, .94), rgba(13, 16, 23, .96));
+      box-shadow: 0 12px 28px rgba(0, 0, 0, .36), inset 0 1px 0 rgba(255, 255, 255, .07);
+    }
+
+    .volume-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, .5), inset 0 1px 1px rgba(255, 255, 255, .3);
-      position: relative;
-      overflow: hidden;
+      margin-bottom: 15px;
+      color: #aeb8ca;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
     }
-    .dps-header::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: #d32f2f; }
-    .dps-header::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 8px; background: #d32f2f; }
-    .dps-title { display: flex; flex-direction: column; padding-left: 6px; }
-    .dps-title h1 { font-size: 1.4rem; letter-spacing: 3px; color: #fff; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
-    .dps-title span { font-size: .65rem; letter-spacing: 2px; color: #ffeb3b; font-weight: 700; text-transform: uppercase; }
-    .status-leds { display: flex; gap: 10px; }
-    .led-box { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-    .led-label { font-size: .55rem; color: #90caf9; font-weight: 700; letter-spacing: 1px; }
-    .led { width: 12px; height: 12px; border-radius: 50%; background: #151c24; border: 1px solid #000; box-shadow: inset 0 1px 3px rgba(0, 0, 0, .9); transition: all .15s ease; }
-    .led.green.on { background: #0f4; box-shadow: 0 0 12px #0f4, inset 0 -1px 2px rgba(0, 0, 0, .4); }
-    .led.red.on { background: #f03; box-shadow: 0 0 14px #f03, inset 0 -1px 2px rgba(0, 0, 0, .4); }
-    .led.blue.on { background: #08f; box-shadow: 0 0 14px #08f, inset 0 -1px 2px rgba(0, 0, 0, .4); }
-    .buttons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 6px; margin-bottom: 16px; }
-    .sgu-btn { position: relative; height: 110px; border-radius: 12px; border: 2px solid transparent; outline: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; gap: 4px; transition: transform 50ms ease, box-shadow 50ms ease, filter .15s ease; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-    .sgu-btn:active { transform: translateY(4px) scale(.97); }
-    .btn-badge { position: absolute; top: 6px; left: 10px; font-size: .7rem; font-weight: 700; opacity: .7; letter-spacing: 1px; }
-    .btn-main-text { font-size: 1.15rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; text-shadow: 2px 2px 2px rgba(0, 0, 0, .9); line-height: 1.1; text-align: center; }
-    .btn-sub-text { font-size: .62rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: .85; }
-    .btn-crack { background: linear-gradient(145deg, #d97706 0, #92400e 100%); color: #fff; border-color: #fbbf24; box-shadow: 0 7px 0 #451a03, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
-    .btn-crack.pulsing, .btn-crack:active { background: linear-gradient(145deg, #f59e0b 0, #b45309 100%); box-shadow: 0 2px 0 #451a03, 0 4px 8px rgba(0, 0, 0, .8), inset 0 1px 3px rgba(255, 255, 255, .6); }
-    .btn-siren { background: linear-gradient(145deg, #b91c1c 0, #7f1d1d 100%); color: #fff; border-color: #ef4444; box-shadow: 0 7px 0 #450a0a, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
-    .btn-siren.active { background: linear-gradient(145deg, #dc2626 0, #991b1b 100%); border-color: #f88; box-shadow: 0 2px 0 #450a0a, 0 0 25px rgba(239, 68, 68, .95), inset 0 2px 4px rgba(255, 255, 255, .6); animation: pulseRedBtn .6s infinite alternate; }
-    @keyframes pulseRedBtn { 0% { filter: brightness(1); } 100% { filter: brightness(1.3); } }
-    .btn-speed { background: linear-gradient(145deg, #1d4ed8 0, #1e3a8a 100%); color: #fff; border-color: #60a5fa; box-shadow: 0 7px 0 #172554, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
-    .btn-speed.active, .btn-speed:active { background: linear-gradient(145deg, #2563eb 0, #1d4ed8 100%); box-shadow: 0 2px 0 #172554, 0 0 22px rgba(37, 99, 235, .95), inset 0 2px 4px rgba(255, 255, 255, .6); }
-    .btn-two { background: linear-gradient(145deg, #0284c7 0, #0f172a 100%); color: #fff; border-color: #38bdf8; box-shadow: 0 7px 0 #0c4a6e, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
-    .btn-two.active, .btn-two:active { background: linear-gradient(145deg, #0369a1 0, #0284c7 100%); box-shadow: 0 2px 0 #0c4a6e, 0 0 22px rgba(56, 189, 248, .95), inset 0 2px 4px rgba(255, 255, 255, .6); }
-    .btn-cracksiren { background: linear-gradient(145deg, #0f3661 0, #081d36 100%); color: #fff; border-color: #38bdf8; box-shadow: 0 7px 0 #040e1a, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
-    .btn-cracksiren.active, .btn-cracksiren:active { background: linear-gradient(145deg, #0284c7 0, #0f3661 100%); box-shadow: 0 2px 0 #040e1a, 0 0 22px rgba(56, 189, 248, .95), inset 0 2px 4px rgba(255, 255, 255, .6); }
-    .btn-mic { background: linear-gradient(145deg, #064e3b 0, #022c22 100%); color: #fff; border-color: #10b981; box-shadow: 0 7px 0 #06281e, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
-    .btn-mic.active, .btn-mic:active { background: linear-gradient(145deg, #059669 0, #047857 100%); border-color: #34d399; box-shadow: 0 2px 0 #06281e, 0 0 25px rgba(16, 185, 129, .95), inset 0 2px 4px rgba(255, 255, 255, .6); animation: pulseGreenBtn .5s infinite alternate; }
-    @keyframes pulseGreenBtn { 0% { filter: brightness(1); } 100% { filter: brightness(1.35); } }
-    .btn-secret { grid-column: 1 / -1; background: linear-gradient(145deg, #581c87 0, #3b0764 100%); color: #fff; border-color: #c084fc; box-shadow: 0 7px 0 #2e1065, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
-    .btn-secret.active, .btn-secret:active { background: linear-gradient(145deg, #7e22ce 0, #581c87 100%); border-color: #e9d5ff; box-shadow: 0 2px 0 #2e1065, 0 0 25px rgba(192, 132, 252, .95), inset 0 2px 4px rgba(255, 255, 255, .6); animation: pulsePurpleBtn .5s infinite alternate; }
-    @keyframes pulsePurpleBtn { 0% { filter: brightness(1); } 100% { filter: brightness(1.35); } }
 
-    .cors-box { display: none; background: #3f0e0e; border: 1px solid #ef4444; color: #fca5a5; padding: 8px 12px; border-radius: 6px; font-size: .72rem; margin-top: 10px; text-align: center; font-family: sans-serif; }
+    .volume-value {
+      min-width: 68px;
+      color: #fff;
+      font-size: .9rem;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .04em;
+      text-align: right;
+    }
+
+    .volume-slider {
+      --progress: 19.84%;
+      width: 100%;
+      height: 26px;
+      display: block;
+      appearance: none;
+      -webkit-appearance: none;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .volume-slider::-webkit-slider-runnable-track {
+      height: 8px;
+      border: 1px solid #303a4d;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #7c3aed 0 var(--progress), #202633 var(--progress) 100%);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, .65);
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      width: 24px;
+      height: 24px;
+      margin-top: -9px;
+      appearance: none;
+      -webkit-appearance: none;
+      border: 3px solid #8b5cf6;
+      border-radius: 50%;
+      background: #f8fafc;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, .65), 0 0 0 5px rgba(139, 92, 246, .15);
+      transition: transform 100ms ease, box-shadow 100ms ease;
+    }
+
+    .volume-slider::-moz-range-track {
+      height: 8px;
+      border: 1px solid #303a4d;
+      border-radius: 999px;
+      background: #202633;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, .65);
+    }
+
+    .volume-slider::-moz-range-progress {
+      height: 8px;
+      border-radius: 999px;
+      background: #7c3aed;
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 19px;
+      height: 19px;
+      border: 3px solid #8b5cf6;
+      border-radius: 50%;
+      background: #f8fafc;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, .65), 0 0 0 5px rgba(139, 92, 246, .15);
+    }
+
+    .volume-slider:active::-webkit-slider-thumb {
+      transform: scale(1.12);
+      box-shadow: 0 3px 12px rgba(0, 0, 0, .7), 0 0 0 7px rgba(139, 92, 246, .22);
+    }
+
+    .volume-slider:focus-visible::-webkit-slider-thumb {
+      outline: 3px solid #fff;
+      outline-offset: 3px;
+    }
+
+    .load-error {
+      display: none;
+      margin-top: 14px;
+      color: #fca5a5;
+      font-size: .78rem;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    @media (max-width: 430px) {
+      body { padding: 16px 12px; }
+      .buttons-grid { gap: 11px; }
+      .sound-btn { min-height: 96px; border-radius: 12px; }
+      .volume-control { margin-top: 22px; padding-inline: 16px; }
+    }
+
+    @media (max-height: 680px) and (orientation: landscape) {
+      body { align-items: start; }
+      .sound-panel { width: min(100%, 760px); }
+      .buttons-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .btn-secret { grid-column: span 2; }
+      .sound-btn { min-height: 88px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="strobe-bar">
-    <div class="strobe-left"></div>
-    <div class="strobe-right"></div>
-  </div>
-  <div class="sgu-console">
-    <div class="screw screw-tl"></div>
-    <div class="screw screw-tr"></div>
-    <div class="screw screw-bl"></div>
-    <div class="screw screw-br"></div>
-    <div class="dps-header">
-      <div class="dps-title">
-        <h1>ДПС ГИБДД</h1>
-        <span>СПЕЦСИГНАЛ СГУ-120</span>
-      </div>
-      <div class="status-leds">
-        <div class="led-box"><div class="led green on" id="ledPower"></div><span class="led-label">СЕТЬ</span></div>
-        <div class="led-box"><div class="led red" id="ledSiren"></div><span class="led-label">СИРЕНА</span></div>
-        <div class="led-box"><div class="led blue" id="ledAudio"></div><span class="led-label">ЗВУК</span></div>
-      </div>
-    </div>
+  <main class="sound-panel">
+    <section class="buttons-grid" aria-label="Звуки">
+      <button class="sound-btn btn-crack" id="btnCrack" type="button">
+        <span class="btn-number">01</span>
+        <span class="btn-label">Крякалка</span>
+      </button>
+      <button class="sound-btn btn-siren" id="btnSiren" type="button" aria-pressed="false">
+        <span class="btn-number">02</span>
+        <span class="btn-label">Сирена</span>
+      </button>
+      <button class="sound-btn btn-speed" id="btnSpeed" type="button">
+        <span class="btn-number">03</span>
+        <span class="btn-label">Быстрая</span>
+      </button>
+      <button class="sound-btn btn-two" id="btnTwo" type="button">
+        <span class="btn-number">04</span>
+        <span class="btn-label">Двойная</span>
+      </button>
+      <button class="sound-btn btn-cracksiren" id="btnCrackSiren" type="button">
+        <span class="btn-number">05</span>
+        <span class="btn-label">Кряк-сирена</span>
+      </button>
+      <button class="sound-btn btn-mic" id="btnMic" type="button">
+        <span class="btn-number">06</span>
+        <span class="btn-label">Микрофон</span>
+      </button>
+      <button class="sound-btn btn-secret" id="btnSecret" type="button">
+        <span class="btn-number">07</span>
+        <span class="btn-label">Секретный сигнал</span>
+      </button>
+    </section>
 
-    <div class="buttons-grid">
-      <button class="sgu-btn btn-crack interactive-control" id="btnCrack">
-        <span class="btn-badge">01</span>
-        <span class="btn-main-text">КРЯКАЛКА</span>
-      </button>
-      <button class="sgu-btn btn-siren interactive-control" id="btnSiren">
-        <span class="btn-badge">02</span>
-        <span class="btn-main-text">СИРЕНА</span>
-      </button>
-      <button class="sgu-btn btn-speed interactive-control" id="btnSpeed">
-        <span class="btn-badge">03</span>
-        <span class="btn-main-text">БЫСТРАЯ</span>
-      </button>
-      <button class="sgu-btn btn-two interactive-control" id="btnTwo">
-        <span class="btn-badge">04</span>
-        <span class="btn-main-text">ДВОЙНАЯ</span>
-      </button>
-      <button class="sgu-btn btn-cracksiren interactive-control" id="btnCrackSiren">
-        <span class="btn-badge">05</span>
-        <span class="btn-main-text">КРЯК-СИРЕНА</span>
-      </button>
-      <button class="sgu-btn btn-mic interactive-control" id="btnMic">
-        <span class="btn-badge">06</span>
-        <span class="btn-main-text">МИКРОФОН</span>
-        <span class="btn-sub-text">УДЕРЖИВАЙТЕ</span>
-      </button>
-      <button class="sgu-btn btn-secret interactive-control" id="btnSecret">
-        <span class="btn-badge">07</span>
-        <span class="btn-main-text">СЕКРЕТНЫЙ СИГНАЛ</span>
-      </button>
-    </div>
-    <div class="cors-box" id="corsBox">⚠️ Ошибка чтения локальных файлов по file://. Запустите через локальный сервер (Live Server / python -m http.server).</div>
-  </div>
+    <section class="volume-control" aria-label="Громкость">
+      <div class="volume-header">
+        <label for="volumeSlider">Громкость</label>
+        <output class="volume-value" id="volumeValue" for="volumeSlider">100%</output>
+      </div>
+      <input
+        class="volume-slider"
+        id="volumeSlider"
+        type="range"
+        min="1"
+        max="500"
+        value="100"
+        step="1"
+        aria-valuetext="100 процентов"
+      >
+    </section>
+
+    <p class="load-error" id="loadError" role="alert">
+      Не удалось загрузить звуки. Откройте страницу через локальный сервер.
+    </p>
+  </main>
 
   <script>
     const AUDIO_FILES = {
@@ -183,42 +382,43 @@
     };
 
     const SOUND_VOLUMES = {
-      crack: 1.0,
-      siren: 1.0,
-      speed_siren: 1.0,
-      two_siren: 1.0,
-      cracksiren: 1.0,
-      koch_v1: 4.0,
-      bratan: 4.0,
+      crack: 1,
+      siren: 1,
+      speed_siren: 1,
+      two_siren: 1,
+      cracksiren: 1,
+      koch_v1: 4,
+      bratan: 4,
       golda: 1.5
     };
 
+    const SECRET_SOUNDS = new Set(["koch_v1", "bratan", "golda"]);
+    const SECRET_FADE_SECONDS = 0.2;
+
+    const audioBuffers = {};
     let audioCtx = null;
     let masterGainNode = null;
-    let sguSoundsGainNode = null; // Bus for sirens and sounds (allows ducking when speaking)
-    const audioBuffers = {};
+    let soundBusGainNode = null;
+    let volumeMultiplier = 1;
 
     let sirenSourceNode = null;
     let sirenGainNode = null;
     let isSirenActive = false;
     let lastTwoSirenTime = 0;
     let lastCrackSirenTime = 0;
+    let activeTwoSirenCount = 0;
+    let activeCrackSirenCount = 0;
 
-    // Microphone SGU nodes
+    let currentSecretSource = null;
+    let currentSecretGain = null;
+    let currentSecretStartTime = 0;
+    let currentSecretDuration = 0;
+
     let micStream = null;
     let micSourceNode = null;
     let micGainNode = null;
-    let micHighpass = null;
-    let micLowpass = null;
-    let micPresence = null;
-    let micCompressor = null;
-    let micDistortion = null;
     let isMicActive = false;
 
-    const ledAudio = document.getElementById("ledAudio");
-    const ledSiren = document.getElementById("ledSiren");
-    const corsBox = document.getElementById("corsBox");
-    const lcdStatusText = document.getElementById("lcdStatusText");
     const btnCrack = document.getElementById("btnCrack");
     const btnSiren = document.getElementById("btnSiren");
     const btnSpeed = document.getElementById("btnSpeed");
@@ -226,122 +426,61 @@
     const btnCrackSiren = document.getElementById("btnCrackSiren");
     const btnMic = document.getElementById("btnMic");
     const btnSecret = document.getElementById("btnSecret");
-
-    let currentSecretSource = null;
-    let currentSecretGain = null;
-    let currentSecretKey = null;
-    let currentSecretStartTime = 0;
-    let currentSecretDuration = 0;
-
-    function playSecretBuffer(bufferKey, onEndedCallback) {
-      if (!audioCtx || !audioBuffers[bufferKey]) return;
-
-      if (currentSecretSource) {
-        try { currentSecretSource.stop(); } catch (e) {}
-        try { currentSecretSource.disconnect(); } catch (e) {}
-        currentSecretSource = null;
-      }
-      if (currentSecretGain) {
-        try { currentSecretGain.disconnect(); } catch (e) {}
-        currentSecretGain = null;
-      }
-
-      const sound = playSingleSoundWithFade(bufferKey, () => {
-        currentSecretSource = null;
-        currentSecretGain = null;
-        currentSecretKey = null;
-        currentSecretStartTime = 0;
-        currentSecretDuration = 0;
-        btnSecret.classList.remove("active");
-        if (!isSirenActive && !isMicActive && lcdStatusText) {
-          lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
-        }
-        if (onEndedCallback) onEndedCallback();
-      });
-
-      if (sound) {
-        currentSecretSource = sound.source;
-        currentSecretGain = sound.gainNode;
-        currentSecretKey = bufferKey;
-        currentSecretStartTime = audioCtx.currentTime;
-        currentSecretDuration = audioBuffers[bufferKey].duration;
-      }
-    }
-
-    function triggerSecretSignal(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      initAudioContext();
-
-      const now = audioCtx.currentTime;
-
-      if (currentSecretSource && currentSecretDuration > 0) {
-        const elapsed = now - currentSecretStartTime;
-        if (elapsed < currentSecretDuration * 0.7) {
-          return;
-        }
-      }
-
-      const options = ["koch_v1", "golda", "bratan"];
-      const soundToPlay = options[Math.floor(Math.random() * options.length)];
-
-      if (lcdStatusText) {
-        const names = {
-          koch_v1: "СЕКРЕТНЫЙ СИГНАЛ: KOCH",
-          golda: "СЕКРЕТНЫЙ СИГНАЛ: ГОЛДА",
-          bratan: "СЕКРЕТНЫЙ СИГНАЛ: БРАТАН"
-        };
-        lcdStatusText.textContent = names[soundToPlay] || "СЕКРЕТНЫЙ СИГНАЛ";
-      }
-
-      btnSecret.classList.add("active");
-      playSecretBuffer(soundToPlay);
-    }
+    const volumeSlider = document.getElementById("volumeSlider");
+    const volumeValue = document.getElementById("volumeValue");
+    const loadError = document.getElementById("loadError");
 
     function initAudioContext() {
       if (!audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioContextClass();
+
         masterGainNode = audioCtx.createGain();
-        masterGainNode.gain.value = 1.0;
+        masterGainNode.gain.value = volumeMultiplier;
         masterGainNode.connect(audioCtx.destination);
 
-        // Sub-bus for sirens & sound effects to enable audio ducking while mic is active
-        sguSoundsGainNode = audioCtx.createGain();
-        sguSoundsGainNode.gain.value = 1.0;
-        sguSoundsGainNode.connect(masterGainNode);
+        soundBusGainNode = audioCtx.createGain();
+        soundBusGainNode.gain.value = 1;
+        soundBusGainNode.connect(masterGainNode);
       }
+
       if (audioCtx.state === "suspended") {
         audioCtx.resume();
       }
     }
 
-    async function preloadAudio() {
-      const keys = Object.keys(AUDIO_FILES);
-      const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function setMasterVolume(percent) {
+      volumeMultiplier = percent / 100;
+      volumeValue.value = `${percent}%`;
+      volumeValue.textContent = `${percent}%`;
+      volumeSlider.setAttribute("aria-valuetext", `${percent} процентов`);
 
-      for (const key of keys) {
-        try {
-          const res = await fetch(AUDIO_FILES[key]);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const bufferData = await res.arrayBuffer();
-          audioBuffers[key] = await tempCtx.decodeAudioData(bufferData);
-        } catch (err) {
-          console.error(err);
-          if (window.location.protocol === "file:") {
-            corsBox.style.display = "block";
-          }
-          return;
-        }
+      const progress = ((percent - 1) / (500 - 1)) * 100;
+      volumeSlider.style.setProperty("--progress", `${progress}%`);
+
+      if (masterGainNode && audioCtx) {
+        const now = audioCtx.currentTime;
+        masterGainNode.gain.cancelScheduledValues(now);
+        masterGainNode.gain.setTargetAtTime(volumeMultiplier, now, 0.015);
       }
-      tempCtx.close();
-      ledAudio.classList.add("on");
     }
 
-    function updateStrobeState() {
-      if (isSirenActive) {
-        document.body.classList.add("strobe-active");
-      } else {
-        document.body.classList.remove("strobe-active");
+    async function preloadAudio() {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const tempCtx = new AudioContextClass();
+
+      try {
+        await Promise.all(Object.entries(AUDIO_FILES).map(async ([key, path]) => {
+          const response = await fetch(path);
+          if (!response.ok) throw new Error(`HTTP ${response.status}: ${path}`);
+          const data = await response.arrayBuffer();
+          audioBuffers[key] = await tempCtx.decodeAudioData(data);
+        }));
+      } catch (error) {
+        console.error(error);
+        loadError.style.display = "block";
+      } finally {
+        await tempCtx.close();
       }
     }
 
@@ -349,180 +488,202 @@
       if (!audioCtx || !audioBuffers[bufferKey]) return null;
 
       const source = audioCtx.createBufferSource();
-      source.buffer = audioBuffers[bufferKey];
-
       const gainNode = audioCtx.createGain();
       const now = audioCtx.currentTime;
-      const duration = source.buffer.duration;
-
+      const duration = audioBuffers[bufferKey].duration;
       const fadeIn = 0.015;
-      const fadeOut = 0.18;
+      const fadeOut = SECRET_SOUNDS.has(bufferKey) ? SECRET_FADE_SECONDS : 0.18;
+      const targetVolume = SOUND_VOLUMES[bufferKey] || 1;
 
-      const targetVol = SOUND_VOLUMES[bufferKey] || 1.0;
-
+      source.buffer = audioBuffers[bufferKey];
       gainNode.gain.setValueAtTime(0.0001, now);
-      gainNode.gain.linearRampToValueAtTime(targetVol, now + fadeIn);
+      gainNode.gain.linearRampToValueAtTime(targetVolume, now + fadeIn);
 
       if (duration > fadeIn + fadeOut) {
-        gainNode.gain.setValueAtTime(targetVol, now + duration - fadeOut);
+        gainNode.gain.setValueAtTime(targetVolume, now + duration - fadeOut);
         gainNode.gain.linearRampToValueAtTime(0.0001, now + duration);
       }
 
       source.connect(gainNode);
-      gainNode.connect(sguSoundsGainNode); // Connect sound effects to duckable sguSoundsGainNode bus
-
+      gainNode.connect(soundBusGainNode);
       source.onended = () => {
-        try { source.disconnect(); } catch (e) {}
-        try { gainNode.disconnect(); } catch (e) {}
-        if (onendedCallback) onendedCallback();
+        try { source.disconnect(); } catch {}
+        try { gainNode.disconnect(); } catch {}
+        onendedCallback?.();
       };
-
       source.start(now);
+
       return { source, gainNode };
     }
 
-    function triggerCrack(e) {
-      if (e && e.preventDefault(), initAudioContext(), !audioBuffers.crack) return;
+    function fadeOutSecret(source, gainNode) {
+      if (!source || !gainNode || !audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      gainNode.gain.cancelScheduledValues(now);
+      gainNode.gain.setValueAtTime(Math.max(gainNode.gain.value, 0.0001), now);
+      gainNode.gain.linearRampToValueAtTime(0.0001, now + SECRET_FADE_SECONDS);
+      try { source.stop(now + SECRET_FADE_SECONDS); } catch {}
+    }
+
+    function triggerSecretSignal(event) {
+      event?.preventDefault();
+      initAudioContext();
+
+      if (currentSecretSource) {
+        const elapsed = audioCtx.currentTime - currentSecretStartTime;
+        if (elapsed < currentSecretDuration * 0.7) return;
+
+        const oldSource = currentSecretSource;
+        const oldGain = currentSecretGain;
+        currentSecretSource = null;
+        currentSecretGain = null;
+        fadeOutSecret(oldSource, oldGain);
+      }
+
+      const options = ["koch_v1", "golda", "bratan"];
+      const soundKey = options[Math.floor(Math.random() * options.length)];
+      btnSecret.classList.add("active");
+
+      const sound = playSingleSoundWithFade(soundKey, () => {
+        if (currentSecretSource === sound?.source) {
+          currentSecretSource = null;
+          currentSecretGain = null;
+          currentSecretStartTime = 0;
+          currentSecretDuration = 0;
+          btnSecret.classList.remove("active");
+        }
+      });
+
+      if (sound) {
+        currentSecretSource = sound.source;
+        currentSecretGain = sound.gainNode;
+        currentSecretStartTime = audioCtx.currentTime;
+        currentSecretDuration = audioBuffers[soundKey].duration;
+      }
+    }
+
+    function triggerCrack(event) {
+      event?.preventDefault();
+      initAudioContext();
+      if (!audioBuffers.crack) return;
+
       playSingleSoundWithFade("crack");
       btnCrack.classList.add("pulsing");
       setTimeout(() => btnCrack.classList.remove("pulsing"), 150);
-      if (lcdStatusText) lcdStatusText.textContent = "СИГНАЛ: КРЯКАЛКА";
     }
 
-    function toggleSiren(e) {
-      if (e && e.preventDefault(), initAudioContext(), !audioBuffers.siren) return;
+    function toggleSiren(event) {
+      event?.preventDefault();
+      initAudioContext();
+      if (!audioBuffers.siren) return;
 
       if (isSirenActive) {
         if (sirenSourceNode && sirenGainNode) {
-          const fadeOutTime = 0.25;
           const now = audioCtx.currentTime;
-          const nodeToStop = sirenSourceNode;
+          const fadeOut = 0.2;
+          const sourceToStop = sirenSourceNode;
           const gainToDisconnect = sirenGainNode;
 
-          gainToDisconnect.gain.setValueAtTime(gainToDisconnect.gain.value, now);
-          gainToDisconnect.gain.linearRampToValueAtTime(0.0001, now + fadeOutTime);
+          gainToDisconnect.gain.cancelScheduledValues(now);
+          gainToDisconnect.gain.setValueAtTime(Math.max(gainToDisconnect.gain.value, 0.0001), now);
+          gainToDisconnect.gain.linearRampToValueAtTime(0.0001, now + fadeOut);
+          try { sourceToStop.stop(now + fadeOut); } catch {}
 
-          try { nodeToStop.stop(now + fadeOutTime); } catch (e) {}
           setTimeout(() => {
-            try { nodeToStop.disconnect(); } catch (e) {}
-            try { gainToDisconnect.disconnect(); } catch (e) {}
-          }, fadeOutTime * 1000 + 50);
-
-          sirenSourceNode = null;
-          sirenGainNode = null;
+            try { sourceToStop.disconnect(); } catch {}
+            try { gainToDisconnect.disconnect(); } catch {}
+          }, 250);
         }
+
+        sirenSourceNode = null;
+        sirenGainNode = null;
         isSirenActive = false;
-        btnSiren.classList.remove("active");
-        ledSiren.classList.remove("on");
-        if (lcdStatusText) lcdStatusText.textContent = "СИРЕНА ВЫКЛЮЧЕНА";
       } else {
         const now = audioCtx.currentTime;
         sirenGainNode = audioCtx.createGain();
         sirenGainNode.gain.setValueAtTime(0.0001, now);
-        sirenGainNode.gain.linearRampToValueAtTime(1.0, now + 0.05);
+        sirenGainNode.gain.linearRampToValueAtTime(SOUND_VOLUMES.siren, now + 0.05);
 
         sirenSourceNode = audioCtx.createBufferSource();
         sirenSourceNode.buffer = audioBuffers.siren;
         sirenSourceNode.loop = true;
-
         sirenSourceNode.connect(sirenGainNode);
-        sirenGainNode.connect(sguSoundsGainNode); // Connect siren to duckable sguSoundsGainNode bus
+        sirenGainNode.connect(soundBusGainNode);
         sirenSourceNode.start(now);
-
         isSirenActive = true;
-        btnSiren.classList.add("active");
-        ledSiren.classList.add("on");
-        if (lcdStatusText) lcdStatusText.textContent = "РЕЖИМ: ОСНОВНАЯ СИРЕНА";
       }
-      updateStrobeState();
+
+      btnSiren.classList.toggle("active", isSirenActive);
+      btnSiren.setAttribute("aria-pressed", String(isSirenActive));
     }
 
-    function triggerSpeedSiren(e) {
-      if (e && e.preventDefault(), initAudioContext(), !audioBuffers.speed_siren) return;
+    function triggerSpeedSiren(event) {
+      event?.preventDefault();
+      initAudioContext();
+      if (!audioBuffers.speed_siren) return;
+
       btnSpeed.classList.add("active");
-      if (lcdStatusText) lcdStatusText.textContent = "РЕЖИМ: БЫСТРАЯ СИРЕНА";
-      playSingleSoundWithFade("speed_siren", () => {
-        btnSpeed.classList.remove("active");
-        if (!isSirenActive && !isMicActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
-      });
+      playSingleSoundWithFade("speed_siren", () => btnSpeed.classList.remove("active"));
     }
 
-    let activeTwoSirenCount = 0;
+    function triggerTwoSiren(event) {
+      event?.preventDefault();
+      initAudioContext();
+      if (!audioBuffers.two_siren) return;
 
-    function triggerTwoSiren(e) {
-      if (e && e.preventDefault(), initAudioContext(), !audioBuffers.two_siren) return;
-      const t = Date.now();
-      if (t - lastTwoSirenTime < 500) return;
-      lastTwoSirenTime = t;
-
+      const now = Date.now();
+      if (now - lastTwoSirenTime < 500) return;
+      lastTwoSirenTime = now;
+      activeTwoSirenCount += 1;
       btnTwo.classList.add("active");
-      if (lcdStatusText) lcdStatusText.textContent = "РЕЖИМ: ДВОЙНАЯ СИРЕНА";
 
-      activeTwoSirenCount++;
       playSingleSoundWithFade("two_siren", () => {
-        activeTwoSirenCount--;
-        if (activeTwoSirenCount <= 0) {
-          activeTwoSirenCount = 0;
-          btnTwo.classList.remove("active");
-          if (!isSirenActive && !isMicActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
-        }
+        activeTwoSirenCount = Math.max(0, activeTwoSirenCount - 1);
+        if (activeTwoSirenCount === 0) btnTwo.classList.remove("active");
       });
     }
 
-    let activeCrackSirenCount = 0;
+    function triggerCrackSiren(event) {
+      event?.preventDefault();
+      initAudioContext();
+      if (!audioBuffers.cracksiren) return;
 
-    function triggerCrackSiren(e) {
-      if (e && e.preventDefault(), initAudioContext(), !audioBuffers.cracksiren) return;
-      const t = Date.now();
-      if (t - lastCrackSirenTime < 600) return;
-      lastCrackSirenTime = t;
-
+      const now = Date.now();
+      if (now - lastCrackSirenTime < 600) return;
+      lastCrackSirenTime = now;
+      activeCrackSirenCount += 1;
       btnCrackSiren.classList.add("active");
-      if (lcdStatusText) lcdStatusText.textContent = "РЕЖИМ: КРЯК-СИРЕНА";
 
-      activeCrackSirenCount++;
       playSingleSoundWithFade("cracksiren", () => {
-        activeCrackSirenCount--;
-        if (activeCrackSirenCount <= 0) {
-          activeCrackSirenCount = 0;
-          btnCrackSiren.classList.remove("active");
-          if (!isSirenActive && !isMicActive && lcdStatusText) lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
-        }
+        activeCrackSirenCount = Math.max(0, activeCrackSirenCount - 1);
+        if (activeCrackSirenCount === 0) btnCrackSiren.classList.remove("active");
       });
     }
 
-    // Smooth Mobile & PC Compatible SGU Horn Saturation Curve
-    function createBalancedSguDistortionCurve() {
+    function createMicrophoneCurve() {
       const samples = 44100;
       const curve = new Float32Array(samples);
-      const drive = 2.2; // Smooth soft-clipping for mobile microphone compatibility
-      for (let i = 0; i < samples; i++) {
+      for (let i = 0; i < samples; i += 1) {
         const x = (i * 2) / samples - 1;
-        curve[i] = Math.tanh(x * drive);
+        curve[i] = Math.tanh(x * 2.2);
       }
       return curve;
     }
 
-    async function startMicrophone(e) {
-      if (e && e.preventDefault) e.preventDefault();
+    async function startMicrophone(event) {
+      event?.preventDefault();
       initAudioContext();
-
-      if (audioCtx && audioCtx.state === "suspended") {
-        await audioCtx.resume();
-      }
-
+      if (audioCtx.state === "suspended") await audioCtx.resume();
       if (isMicActive) return;
+
       isMicActive = true;
       btnMic.classList.add("active");
-      if (lcdStatusText) lcdStatusText.textContent = "🎤 ГРОМКАЯ СВЯЗЬ: МИКРОФОН АКТИВЕН";
 
-      // Duck background siren and sounds volume smoothly to 20% while mic is active
-      if (sguSoundsGainNode && audioCtx) {
+      if (soundBusGainNode) {
         const now = audioCtx.currentTime;
-        const currentVal = sguSoundsGainNode.gain.value;
-        sguSoundsGainNode.gain.cancelScheduledValues(now);
-        sguSoundsGainNode.gain.setValueAtTime(currentVal, now);
-        sguSoundsGainNode.gain.linearRampToValueAtTime(0.2, now + 0.1);
+        soundBusGainNode.gain.cancelScheduledValues(now);
+        soundBusGainNode.gain.setTargetAtTime(0.2, now, 0.03);
       }
 
       try {
@@ -531,15 +692,14 @@
             audio: {
               echoCancellation: false,
               noiseSuppression: false,
-              autoGainControl: false // Disables mobile OS AGC volume pumping
+              autoGainControl: false
             }
           });
         }
 
-        if (!micSourceNode && micStream) {
+        if (!micSourceNode) {
           micSourceNode = audioCtx.createMediaStreamSource(micStream);
 
-          // 1. Input Peak Limiter (Protects mobile phone mics from hard digital clipping)
           const inputLimiter = audioCtx.createDynamicsCompressor();
           inputLimiter.threshold.value = -16;
           inputLimiter.knee.value = 4;
@@ -547,73 +707,58 @@
           inputLimiter.attack.value = 0.001;
           inputLimiter.release.value = 0.04;
 
-          // 2. Drive Gain (Unity 1.0)
-          const micDriveGain = audioCtx.createGain();
-          micDriveGain.gain.value = 1.0;
+          const distortion = audioCtx.createWaveShaper();
+          distortion.curve = createMicrophoneCurve();
+          distortion.oversample = "2x";
 
-          // 3. Smooth Horn Saturation Node
-          micDistortion = audioCtx.createWaveShaper();
-          micDistortion.curve = createBalancedSguDistortionCurve();
-          micDistortion.oversample = "2x";
+          const highpass = audioCtx.createBiquadFilter();
+          highpass.type = "highpass";
+          highpass.frequency.value = 320;
 
-          // 4. Highpass filter (cuts low rumble < 320Hz)
-          micHighpass = audioCtx.createBiquadFilter();
-          micHighpass.type = "highpass";
-          micHighpass.frequency.value = 320;
+          const lowpass = audioCtx.createBiquadFilter();
+          lowpass.type = "lowpass";
+          lowpass.frequency.value = 2800;
 
-          // 5. Lowpass filter (cuts high sizzle > 2800Hz)
-          micLowpass = audioCtx.createBiquadFilter();
-          micLowpass.type = "lowpass";
-          micLowpass.frequency.value = 2800;
+          const presence = audioCtx.createBiquadFilter();
+          presence.type = "peaking";
+          presence.frequency.value = 1300;
+          presence.Q.value = 1.5;
+          presence.gain.value = 6;
 
-          // 6. Horn Speaker Resonance Peak (~1300Hz, Q 1.5, +6.0dB)
-          micPresence = audioCtx.createBiquadFilter();
-          micPresence.type = "peaking";
-          micPresence.frequency.value = 1300;
-          micPresence.Q.value = 1.5;
-          micPresence.gain.value = 6.0;
+          const compressor = audioCtx.createDynamicsCompressor();
+          compressor.threshold.value = -20;
+          compressor.knee.value = 6;
+          compressor.ratio.value = 4;
+          compressor.attack.value = 0.003;
+          compressor.release.value = 0.06;
 
-          // 7. Output Broadcast Compressor
-          micCompressor = audioCtx.createDynamicsCompressor();
-          micCompressor.threshold.value = -20;
-          micCompressor.knee.value = 6;
-          micCompressor.ratio.value = 4.0;
-          micCompressor.attack.value = 0.003;
-          micCompressor.release.value = 0.06;
-
-          // 8. Tamed Output Mic Gain (1.8x - prevents phone speaker overloading)
           micGainNode = audioCtx.createGain();
           micGainNode.gain.value = 1.8;
 
-          // Connect Web Audio Nodes
-          micSourceNode.connect(inputLimiter);
-          inputLimiter.connect(micDriveGain);
-          micDriveGain.connect(micDistortion);
-          micDistortion.connect(micHighpass);
-          micHighpass.connect(micLowpass);
-          micLowpass.connect(micPresence);
-          micPresence.connect(micCompressor);
-          micCompressor.connect(micGainNode);
-          micGainNode.connect(masterGainNode);
-        } else if (micGainNode) {
-          micGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+          micSourceNode
+            .connect(inputLimiter)
+            .connect(distortion)
+            .connect(highpass)
+            .connect(lowpass)
+            .connect(presence)
+            .connect(compressor)
+            .connect(micGainNode)
+            .connect(masterGainNode);
+        } else {
           micGainNode.gain.setValueAtTime(1.8, audioCtx.currentTime);
         }
 
-        if (micStream) {
-          micStream.getAudioTracks().forEach(track => track.enabled = true);
-        }
-      } catch (err) {
-        console.error("Microphone access error:", err);
-        isMicActive = false;
-        btnMic.classList.remove("active");
-        if (lcdStatusText) lcdStatusText.textContent = "ОШИБКА: НЕТ ДОСТУПА К МИКРОФОНУ";
+        micStream.getAudioTracks().forEach(track => { track.enabled = true; });
+      } catch (error) {
+        console.error("Microphone access error:", error);
+        stopMicrophone();
       }
     }
 
-    function stopMicrophone(e) {
-      if (e && e.preventDefault) e.preventDefault();
+    function stopMicrophone(event) {
+      event?.preventDefault();
       if (!isMicActive) return;
+
       isMicActive = false;
       btnMic.classList.remove("active");
 
@@ -622,58 +767,31 @@
         micGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
       }
 
-      // Restore background siren and sounds volume back to 100%
-      if (sguSoundsGainNode && audioCtx) {
+      if (soundBusGainNode && audioCtx) {
         const now = audioCtx.currentTime;
-        const currentVal = sguSoundsGainNode.gain.value;
-        sguSoundsGainNode.gain.cancelScheduledValues(now);
-        sguSoundsGainNode.gain.setValueAtTime(currentVal, now);
-        sguSoundsGainNode.gain.linearRampToValueAtTime(1.0, now + 0.15);
-      }
-
-      if (lcdStatusText) {
-        lcdStatusText.textContent = isSirenActive ? "РЕЖИМ: ОСНОВНАЯ СИРЕНА" : "СГУ ДПС ГОТОВ К РАБОТЕ";
+        soundBusGainNode.gain.cancelScheduledValues(now);
+        soundBusGainNode.gain.setTargetAtTime(1, now, 0.04);
       }
     }
 
-    function bindButton(el, fn) {
-      el.addEventListener("pointerdown", fn);
-    }
-
-
-
-    bindButton(btnCrack, triggerCrack);
-    bindButton(btnSiren, toggleSiren);
-    bindButton(btnSpeed, triggerSpeedSiren);
-    bindButton(btnTwo, triggerTwoSiren);
-    bindButton(btnCrackSiren, triggerCrackSiren);
-    bindButton(btnSecret, triggerSecretSignal);
+    btnCrack.addEventListener("pointerdown", triggerCrack);
+    btnSiren.addEventListener("pointerdown", toggleSiren);
+    btnSpeed.addEventListener("pointerdown", triggerSpeedSiren);
+    btnTwo.addEventListener("pointerdown", triggerTwoSiren);
+    btnCrackSiren.addEventListener("pointerdown", triggerCrackSiren);
+    btnSecret.addEventListener("pointerdown", triggerSecretSignal);
 
     btnMic.addEventListener("pointerdown", startMicrophone);
     btnMic.addEventListener("pointerup", stopMicrophone);
     btnMic.addEventListener("pointercancel", stopMicrophone);
     btnMic.addEventListener("pointerleave", stopMicrophone);
-    btnMic.addEventListener("contextmenu", e => e.preventDefault());
+    btnMic.addEventListener("contextmenu", event => event.preventDefault());
 
+    volumeSlider.addEventListener("input", () => {
+      setMasterVolume(Number(volumeSlider.value));
+    });
 
-
-    let lastTap = 0;
-    function handleFullscreen(e) {
-      if (e.target.closest(".interactive-control")) return;
-      const t = (new Date()).getTime();
-      if ((t - lastTap < 300 && t - lastTap > 0) || e.type === "dblclick") {
-        if (e) e.preventDefault();
-        if (document.fullscreenElement) {
-          if (document.exitFullscreen) document.exitFullscreen();
-        } else {
-          document.documentElement.requestFullscreen().catch(() => {});
-        }
-      }
-      lastTap = t;
-    }
-
-    document.body.addEventListener("dblclick", handleFullscreen);
-    document.body.addEventListener("touchend", handleFullscreen);
+    setMasterVolume(100);
     window.addEventListener("DOMContentLoaded", preloadAudio);
   </script>
 </body>
