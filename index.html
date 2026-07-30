@@ -164,24 +164,113 @@
       animation: activePulse .55s infinite alternate;
     }
 
-    .btn-secret {
-      grid-column: 1 / -1;
-      background: linear-gradient(145deg, #6b21a8, #3b0764);
+    @keyframes activePulse {
+      from { filter: brightness(1); }
+      to { filter: brightness(1.28); }
+    }
+
+    .category-browser {
+      outline: 0;
+      touch-action: pan-y;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .category-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .category-title {
+      font-size: clamp(1.3rem, 5vw, 1.7rem);
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .category-dots {
+      display: flex;
+      gap: 7px;
+    }
+
+    .category-dot {
+      width: 7px;
+      height: 7px;
+      border: 0;
+      border-radius: 50%;
+      background: #384154;
+      transition: width 180ms ease, background 180ms ease;
+    }
+
+    .category-dot.active {
+      width: 24px;
+      border-radius: 99px;
+      background: #8b5cf6;
+    }
+
+    .category-content.switching {
+      animation: categoryIn 220ms ease both;
+    }
+
+    @keyframes categoryIn {
+      from { opacity: .2; transform: translateX(var(--slide-direction, 18px)); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .category-hint {
+      margin-top: 14px;
+      color: #626d82;
+      font-size: .64rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .tone-gold {
+      background: linear-gradient(145deg, #ca8a04, #713f12);
+      border-color: #fde047;
+      box-shadow: 0 7px 0 #422006, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
+    }
+
+    .tone-purple {
+      background: linear-gradient(145deg, #7e22ce, #3b0764);
       border-color: #c084fc;
       box-shadow: 0 7px 0 #2e1065, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
     }
 
-    .btn-secret.active,
-    .btn-secret:active {
-      background: linear-gradient(145deg, #9333ea, #581c87);
-      border-color: #e9d5ff;
-      box-shadow: 0 2px 0 #2e1065, 0 0 26px rgba(192, 132, 252, .7), inset 0 2px 4px rgba(255, 255, 255, .5);
-      animation: activePulse .55s infinite alternate;
+    .tone-pink {
+      background: linear-gradient(145deg, #be185d, #500724);
+      border-color: #f472b6;
+      box-shadow: 0 7px 0 #3f071f, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
     }
 
-    @keyframes activePulse {
-      from { filter: brightness(1); }
-      to { filter: brightness(1.28); }
+    .tone-indigo {
+      background: linear-gradient(145deg, #4f46e5, #1e1b4b);
+      border-color: #818cf8;
+      box-shadow: 0 7px 0 #17143d, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
+    }
+
+    .tone-teal {
+      background: linear-gradient(145deg, #0f766e, #042f2e);
+      border-color: #2dd4bf;
+      box-shadow: 0 7px 0 #022c2b, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
+    }
+
+    .tone-slate {
+      background: linear-gradient(145deg, #475569, #0f172a);
+      border-color: #94a3b8;
+      box-shadow: 0 7px 0 #090f1d, 0 12px 20px rgba(0, 0, 0, .42), inset 0 1px 2px rgba(255, 255, 255, .35);
+    }
+
+    .sound-btn.active {
+      filter: brightness(1.3);
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, .75), 0 0 24px color-mix(in srgb, currentColor 32%, transparent);
     }
 
     .volume-control {
@@ -301,7 +390,6 @@
       body { align-items: start; }
       .sound-panel { width: min(100%, 760px); }
       .buttons-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-      .btn-secret { grid-column: span 2; }
       .sound-btn { min-height: 88px; }
     }
 
@@ -316,35 +404,15 @@
 </head>
 <body>
   <main class="sound-panel">
-    <section class="buttons-grid" aria-label="Звуки">
-      <button class="sound-btn btn-crack" id="btnCrack" type="button">
-        <span class="btn-number">01</span>
-        <span class="btn-label">Крякалка</span>
-      </button>
-      <button class="sound-btn btn-siren" id="btnSiren" type="button" aria-pressed="false">
-        <span class="btn-number">02</span>
-        <span class="btn-label">Сирена</span>
-      </button>
-      <button class="sound-btn btn-speed" id="btnSpeed" type="button">
-        <span class="btn-number">03</span>
-        <span class="btn-label">Быстрая</span>
-      </button>
-      <button class="sound-btn btn-two" id="btnTwo" type="button">
-        <span class="btn-number">04</span>
-        <span class="btn-label">Двойная</span>
-      </button>
-      <button class="sound-btn btn-cracksiren" id="btnCrackSiren" type="button">
-        <span class="btn-number">05</span>
-        <span class="btn-label">Кряк-сирена</span>
-      </button>
-      <button class="sound-btn btn-mic" id="btnMic" type="button">
-        <span class="btn-number">06</span>
-        <span class="btn-label">Микрофон</span>
-      </button>
-      <button class="sound-btn btn-secret" id="btnSecret" type="button">
-        <span class="btn-number">07</span>
-        <span class="btn-label">Секретный сигнал</span>
-      </button>
+    <section class="category-browser" id="categoryBrowser" aria-label="Категории звуков" tabindex="0">
+      <div class="category-heading">
+        <h1 class="category-title" id="categoryTitle" aria-live="polite">ДПС</h1>
+        <div class="category-dots" id="categoryDots" aria-hidden="true"></div>
+      </div>
+      <div class="category-content" id="categoryContent">
+        <div class="buttons-grid" id="buttonsGrid" aria-label="Звуки категории ДПС"></div>
+      </div>
+      <p class="category-hint">Смахните или прокрутите для смены категории</p>
     </section>
 
     <section class="volume-control" aria-label="Громкость">
@@ -369,380 +437,6 @@
     </p>
   </main>
 
-  <script>
-    const AUDIO_FILES = {
-      crack: "./crack.mp3",
-      siren: "./siren.mp3",
-      speed_siren: "./speed_siren.mp3",
-      two_siren: "./two_siren.mp3",
-      cracksiren: "./cracksiren.mp3",
-      koch_v1: "./koch_v1.mp3",
-      bratan: "./bratan.mp3",
-      golda: "./golda.mp3"
-    };
-
-    const SOUND_VOLUMES = {
-      crack: 1,
-      siren: 1,
-      speed_siren: 1,
-      two_siren: 1,
-      cracksiren: 1,
-      koch_v1: 4,
-      bratan: 4,
-      golda: 1.5
-    };
-
-    const SECRET_SOUNDS = new Set(["koch_v1", "bratan", "golda"]);
-    const SECRET_FADE_SECONDS = 0.2;
-
-    const audioBuffers = {};
-    let audioCtx = null;
-    let masterGainNode = null;
-    let outputLimiterNode = null;
-    let soundBusGainNode = null;
-    let volumeMultiplier = 1;
-
-    let sirenSourceNode = null;
-    let sirenGainNode = null;
-    let isSirenActive = false;
-    let lastTwoSirenTime = 0;
-    let lastCrackSirenTime = 0;
-    let activeTwoSirenCount = 0;
-    let activeCrackSirenCount = 0;
-
-    let currentSecretSource = null;
-    let currentSecretGain = null;
-    let currentSecretStartTime = 0;
-    let currentSecretDuration = 0;
-
-    let micStream = null;
-    let micSourceNode = null;
-    let micGainNode = null;
-    let isMicActive = false;
-
-    const btnCrack = document.getElementById("btnCrack");
-    const btnSiren = document.getElementById("btnSiren");
-    const btnSpeed = document.getElementById("btnSpeed");
-    const btnTwo = document.getElementById("btnTwo");
-    const btnCrackSiren = document.getElementById("btnCrackSiren");
-    const btnMic = document.getElementById("btnMic");
-    const btnSecret = document.getElementById("btnSecret");
-    const volumeSlider = document.getElementById("volumeSlider");
-    const volumeValue = document.getElementById("volumeValue");
-    const loadError = document.getElementById("loadError");
-
-    function initAudioContext() {
-      if (!audioCtx) {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        audioCtx = new AudioContextClass();
-
-        masterGainNode = audioCtx.createGain();
-        masterGainNode.gain.value = volumeMultiplier;
-
-        outputLimiterNode = audioCtx.createDynamicsCompressor();
-        outputLimiterNode.threshold.value = -3;
-        outputLimiterNode.knee.value = 6;
-        outputLimiterNode.ratio.value = 12;
-        outputLimiterNode.attack.value = 0.003;
-        outputLimiterNode.release.value = 0.18;
-
-        masterGainNode.connect(outputLimiterNode);
-        outputLimiterNode.connect(audioCtx.destination);
-
-        soundBusGainNode = audioCtx.createGain();
-        soundBusGainNode.gain.value = 1;
-        soundBusGainNode.connect(masterGainNode);
-      }
-
-      if (audioCtx.state === "suspended") {
-        audioCtx.resume();
-      }
-    }
-
-    function setMasterVolume(percent) {
-      volumeMultiplier = percent / 100;
-      volumeValue.value = `${percent}%`;
-      volumeValue.textContent = `${percent}%`;
-      volumeSlider.setAttribute("aria-valuetext", `${percent} процентов`);
-
-      const progress = ((percent - 1) / (500 - 1)) * 100;
-      volumeSlider.style.setProperty("--progress", `${progress}%`);
-
-      if (masterGainNode && audioCtx) {
-        const now = audioCtx.currentTime;
-        masterGainNode.gain.cancelScheduledValues(now);
-        masterGainNode.gain.setTargetAtTime(volumeMultiplier, now, 0.015);
-      }
-    }
-
-    async function preloadAudio() {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      const tempCtx = new AudioContextClass();
-
-      try {
-        await Promise.all(Object.entries(AUDIO_FILES).map(async ([key, path]) => {
-          const response = await fetch(path);
-          if (!response.ok) throw new Error(`HTTP ${response.status}: ${path}`);
-          const data = await response.arrayBuffer();
-          audioBuffers[key] = await tempCtx.decodeAudioData(data);
-        }));
-      } catch (error) {
-        console.error(error);
-        loadError.style.display = "block";
-      } finally {
-        await tempCtx.close();
-      }
-    }
-
-    function playSingleSoundWithFade(bufferKey, onendedCallback) {
-      if (!audioCtx || !audioBuffers[bufferKey]) return null;
-
-      const source = audioCtx.createBufferSource();
-      const gainNode = audioCtx.createGain();
-      const now = audioCtx.currentTime;
-      const duration = audioBuffers[bufferKey].duration;
-      const fadeIn = 0.015;
-      const fadeOut = SECRET_SOUNDS.has(bufferKey) ? SECRET_FADE_SECONDS : 0.18;
-      const targetVolume = SOUND_VOLUMES[bufferKey] || 1;
-
-      source.buffer = audioBuffers[bufferKey];
-      gainNode.gain.setValueAtTime(0.0001, now);
-      gainNode.gain.linearRampToValueAtTime(targetVolume, now + fadeIn);
-
-      if (duration > fadeIn + fadeOut) {
-        gainNode.gain.setValueAtTime(targetVolume, now + duration - fadeOut);
-        gainNode.gain.linearRampToValueAtTime(0.0001, now + duration);
-      }
-
-      source.connect(gainNode);
-      gainNode.connect(soundBusGainNode);
-      source.onended = () => {
-        try { source.disconnect(); } catch {}
-        try { gainNode.disconnect(); } catch {}
-        onendedCallback?.();
-      };
-      source.start(now);
-
-      return { source, gainNode };
-    }
-
-    function fadeOutSecret(source, gainNode) {
-      if (!source || !gainNode || !audioCtx) return;
-      const now = audioCtx.currentTime;
-
-      gainNode.gain.cancelScheduledValues(now);
-      gainNode.gain.setValueAtTime(Math.max(gainNode.gain.value, 0.0001), now);
-      gainNode.gain.linearRampToValueAtTime(0.0001, now + SECRET_FADE_SECONDS);
-      try { source.stop(now + SECRET_FADE_SECONDS); } catch {}
-    }
-
-    function triggerSecretSignal(event) {
-      event?.preventDefault();
-      initAudioContext();
-
-      if (currentSecretSource) {
-        const elapsed = audioCtx.currentTime - currentSecretStartTime;
-        if (elapsed < currentSecretDuration * 0.7) return;
-
-        const oldSource = currentSecretSource;
-        const oldGain = currentSecretGain;
-        currentSecretSource = null;
-        currentSecretGain = null;
-        fadeOutSecret(oldSource, oldGain);
-      }
-
-      const options = ["koch_v1", "golda", "bratan"];
-      const soundKey = options[Math.floor(Math.random() * options.length)];
-      btnSecret.classList.add("active");
-
-      const sound = playSingleSoundWithFade(soundKey, () => {
-        if (currentSecretSource === sound?.source) {
-          currentSecretSource = null;
-          currentSecretGain = null;
-          currentSecretStartTime = 0;
-          currentSecretDuration = 0;
-          btnSecret.classList.remove("active");
-        }
-      });
-
-      if (sound) {
-        currentSecretSource = sound.source;
-        currentSecretGain = sound.gainNode;
-        currentSecretStartTime = audioCtx.currentTime;
-        currentSecretDuration = audioBuffers[soundKey].duration;
-      }
-    }
-
-    function triggerCrack(event) {
-      event?.preventDefault();
-      initAudioContext();
-      if (!audioBuffers.crack) return;
-
-      playSingleSoundWithFade("crack");
-      btnCrack.classList.add("pulsing");
-      setTimeout(() => btnCrack.classList.remove("pulsing"), 150);
-    }
-
-    function toggleSiren(event) {
-      event?.preventDefault();
-      initAudioContext();
-      if (!audioBuffers.siren) return;
-
-      if (isSirenActive) {
-        if (sirenSourceNode && sirenGainNode) {
-          const now = audioCtx.currentTime;
-          const fadeOut = 0.2;
-          const sourceToStop = sirenSourceNode;
-          const gainToDisconnect = sirenGainNode;
-
-          gainToDisconnect.gain.cancelScheduledValues(now);
-          gainToDisconnect.gain.setValueAtTime(Math.max(gainToDisconnect.gain.value, 0.0001), now);
-          gainToDisconnect.gain.linearRampToValueAtTime(0.0001, now + fadeOut);
-          try { sourceToStop.stop(now + fadeOut); } catch {}
-
-          setTimeout(() => {
-            try { sourceToStop.disconnect(); } catch {}
-            try { gainToDisconnect.disconnect(); } catch {}
-          }, 250);
-        }
-
-        sirenSourceNode = null;
-        sirenGainNode = null;
-        isSirenActive = false;
-      } else {
-        const now = audioCtx.currentTime;
-        sirenGainNode = audioCtx.createGain();
-        sirenGainNode.gain.setValueAtTime(0.0001, now);
-        sirenGainNode.gain.linearRampToValueAtTime(SOUND_VOLUMES.siren, now + 0.05);
-
-        sirenSourceNode = audioCtx.createBufferSource();
-        sirenSourceNode.buffer = audioBuffers.siren;
-        sirenSourceNode.loop = true;
-        sirenSourceNode.connect(sirenGainNode);
-        sirenGainNode.connect(soundBusGainNode);
-        sirenSourceNode.start(now);
-        isSirenActive = true;
-      }
-
-      btnSiren.classList.toggle("active", isSirenActive);
-      btnSiren.setAttribute("aria-pressed", String(isSirenActive));
-    }
-
-    function triggerSpeedSiren(event) {
-      event?.preventDefault();
-      initAudioContext();
-      if (!audioBuffers.speed_siren) return;
-
-      btnSpeed.classList.add("active");
-      playSingleSoundWithFade("speed_siren", () => btnSpeed.classList.remove("active"));
-    }
-
-    function triggerTwoSiren(event) {
-      event?.preventDefault();
-      initAudioContext();
-      if (!audioBuffers.two_siren) return;
-
-      const now = Date.now();
-      if (now - lastTwoSirenTime < 500) return;
-      lastTwoSirenTime = now;
-      activeTwoSirenCount += 1;
-      btnTwo.classList.add("active");
-
-      playSingleSoundWithFade("two_siren", () => {
-        activeTwoSirenCount = Math.max(0, activeTwoSirenCount - 1);
-        if (activeTwoSirenCount === 0) btnTwo.classList.remove("active");
-      });
-    }
-
-    function triggerCrackSiren(event) {
-      event?.preventDefault();
-      initAudioContext();
-      if (!audioBuffers.cracksiren) return;
-
-      const now = Date.now();
-      if (now - lastCrackSirenTime < 600) return;
-      lastCrackSirenTime = now;
-      activeCrackSirenCount += 1;
-      btnCrackSiren.classList.add("active");
-
-      playSingleSoundWithFade("cracksiren", () => {
-        activeCrackSirenCount = Math.max(0, activeCrackSirenCount - 1);
-        if (activeCrackSirenCount === 0) btnCrackSiren.classList.remove("active");
-      });
-    }
-
-    async function startMicrophone(event) {
-      event?.preventDefault();
-      initAudioContext();
-      if (audioCtx.state === "suspended") await audioCtx.resume();
-      if (isMicActive) return;
-
-      isMicActive = true;
-      btnMic.classList.add("active");
-
-      try {
-        if (!micStream) {
-          micStream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-              echoCancellation: false,
-              noiseSuppression: false,
-              autoGainControl: false
-            }
-          });
-        }
-
-        if (!micSourceNode) {
-          micSourceNode = audioCtx.createMediaStreamSource(micStream);
-
-          micGainNode = audioCtx.createGain();
-          micGainNode.gain.value = 1;
-
-          micSourceNode.connect(micGainNode);
-          micGainNode.connect(masterGainNode);
-        } else {
-          micGainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-        }
-
-        micStream.getAudioTracks().forEach(track => { track.enabled = true; });
-      } catch (error) {
-        console.error("Microphone access error:", error);
-        stopMicrophone();
-      }
-    }
-
-    function stopMicrophone(event) {
-      event?.preventDefault();
-      if (!isMicActive) return;
-
-      isMicActive = false;
-      btnMic.classList.remove("active");
-
-      if (micGainNode && audioCtx) {
-        micGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-        micGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-      }
-
-    }
-
-    btnCrack.addEventListener("pointerdown", triggerCrack);
-    btnSiren.addEventListener("pointerdown", toggleSiren);
-    btnSpeed.addEventListener("pointerdown", triggerSpeedSiren);
-    btnTwo.addEventListener("pointerdown", triggerTwoSiren);
-    btnCrackSiren.addEventListener("pointerdown", triggerCrackSiren);
-    btnSecret.addEventListener("pointerdown", triggerSecretSignal);
-
-    btnMic.addEventListener("pointerdown", startMicrophone);
-    btnMic.addEventListener("pointerup", stopMicrophone);
-    btnMic.addEventListener("pointercancel", stopMicrophone);
-    btnMic.addEventListener("pointerleave", stopMicrophone);
-    btnMic.addEventListener("contextmenu", event => event.preventDefault());
-
-    volumeSlider.addEventListener("input", () => {
-      setMasterVolume(Number(volumeSlider.value));
-    });
-
-    setMasterVolume(100);
-    window.addEventListener("DOMContentLoaded", preloadAudio);
-  </script>
+  <script src="./app.js"></script>
 </body>
 </html>
