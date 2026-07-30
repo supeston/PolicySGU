@@ -398,6 +398,7 @@
     const audioBuffers = {};
     let audioCtx = null;
     let masterGainNode = null;
+    let outputLimiterNode = null;
     let soundBusGainNode = null;
     let volumeMultiplier = 1;
 
@@ -437,7 +438,16 @@
 
         masterGainNode = audioCtx.createGain();
         masterGainNode.gain.value = volumeMultiplier;
-        masterGainNode.connect(audioCtx.destination);
+
+        outputLimiterNode = audioCtx.createDynamicsCompressor();
+        outputLimiterNode.threshold.value = -3;
+        outputLimiterNode.knee.value = 6;
+        outputLimiterNode.ratio.value = 12;
+        outputLimiterNode.attack.value = 0.003;
+        outputLimiterNode.release.value = 0.18;
+
+        masterGainNode.connect(outputLimiterNode);
+        outputLimiterNode.connect(audioCtx.destination);
 
         soundBusGainNode = audioCtx.createGain();
         soundBusGainNode.gain.value = 1;
@@ -661,16 +671,6 @@
       });
     }
 
-    function createMicrophoneCurve() {
-      const samples = 44100;
-      const curve = new Float32Array(samples);
-      for (let i = 0; i < samples; i += 1) {
-        const x = (i * 2) / samples - 1;
-        curve[i] = Math.tanh(x * 2.2);
-      }
-      return curve;
-    }
-
     async function startMicrophone(event) {
       event?.preventDefault();
       initAudioContext();
@@ -679,12 +679,6 @@
 
       isMicActive = true;
       btnMic.classList.add("active");
-
-      if (soundBusGainNode) {
-        const now = audioCtx.currentTime;
-        soundBusGainNode.gain.cancelScheduledValues(now);
-        soundBusGainNode.gain.setTargetAtTime(0.2, now, 0.03);
-      }
 
       try {
         if (!micStream) {
@@ -700,52 +694,13 @@
         if (!micSourceNode) {
           micSourceNode = audioCtx.createMediaStreamSource(micStream);
 
-          const inputLimiter = audioCtx.createDynamicsCompressor();
-          inputLimiter.threshold.value = -16;
-          inputLimiter.knee.value = 4;
-          inputLimiter.ratio.value = 10;
-          inputLimiter.attack.value = 0.001;
-          inputLimiter.release.value = 0.04;
-
-          const distortion = audioCtx.createWaveShaper();
-          distortion.curve = createMicrophoneCurve();
-          distortion.oversample = "2x";
-
-          const highpass = audioCtx.createBiquadFilter();
-          highpass.type = "highpass";
-          highpass.frequency.value = 320;
-
-          const lowpass = audioCtx.createBiquadFilter();
-          lowpass.type = "lowpass";
-          lowpass.frequency.value = 2800;
-
-          const presence = audioCtx.createBiquadFilter();
-          presence.type = "peaking";
-          presence.frequency.value = 1300;
-          presence.Q.value = 1.5;
-          presence.gain.value = 6;
-
-          const compressor = audioCtx.createDynamicsCompressor();
-          compressor.threshold.value = -20;
-          compressor.knee.value = 6;
-          compressor.ratio.value = 4;
-          compressor.attack.value = 0.003;
-          compressor.release.value = 0.06;
-
           micGainNode = audioCtx.createGain();
-          micGainNode.gain.value = 1.8;
+          micGainNode.gain.value = 1;
 
-          micSourceNode
-            .connect(inputLimiter)
-            .connect(distortion)
-            .connect(highpass)
-            .connect(lowpass)
-            .connect(presence)
-            .connect(compressor)
-            .connect(micGainNode)
-            .connect(masterGainNode);
+          micSourceNode.connect(micGainNode);
+          micGainNode.connect(masterGainNode);
         } else {
-          micGainNode.gain.setValueAtTime(1.8, audioCtx.currentTime);
+          micGainNode.gain.setValueAtTime(1, audioCtx.currentTime);
         }
 
         micStream.getAudioTracks().forEach(track => { track.enabled = true; });
@@ -767,11 +722,6 @@
         micGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
       }
 
-      if (soundBusGainNode && audioCtx) {
-        const now = audioCtx.currentTime;
-        soundBusGainNode.gain.cancelScheduledValues(now);
-        soundBusGainNode.gain.setTargetAtTime(1, now, 0.04);
-      }
     }
 
     btnCrack.addEventListener("pointerdown", triggerCrack);
