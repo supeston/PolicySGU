@@ -112,6 +112,9 @@
     .btn-mic { background: linear-gradient(145deg, #064e3b 0, #022c22 100%); color: #fff; border-color: #10b981; box-shadow: 0 7px 0 #06281e, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
     .btn-mic.active, .btn-mic:active { background: linear-gradient(145deg, #059669 0, #047857 100%); border-color: #34d399; box-shadow: 0 2px 0 #06281e, 0 0 25px rgba(16, 185, 129, .95), inset 0 2px 4px rgba(255, 255, 255, .6); animation: pulseGreenBtn .5s infinite alternate; }
     @keyframes pulseGreenBtn { 0% { filter: brightness(1); } 100% { filter: brightness(1.35); } }
+    .btn-secret { grid-column: 1 / -1; background: linear-gradient(145deg, #581c87 0, #3b0764 100%); color: #fff; border-color: #c084fc; box-shadow: 0 7px 0 #2e1065, 0 10px 15px rgba(0, 0, 0, .8), inset 0 1px 2px rgba(255, 255, 255, .4); }
+    .btn-secret.active, .btn-secret:active { background: linear-gradient(145deg, #7e22ce 0, #581c87 100%); border-color: #e9d5ff; box-shadow: 0 2px 0 #2e1065, 0 0 25px rgba(192, 132, 252, .95), inset 0 2px 4px rgba(255, 255, 255, .6); animation: pulsePurpleBtn .5s infinite alternate; }
+    @keyframes pulsePurpleBtn { 0% { filter: brightness(1); } 100% { filter: brightness(1.35); } }
     .console-footer { background: #090c10; border: 2px solid #1e293b; border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
     .volume-box { display: flex; align-items: center; gap: 12px; width: 100%; }
     .vol-text { font-size: .7rem; font-weight: 700; color: #94a3b8; letter-spacing: 1px; white-space: nowrap; }
@@ -176,6 +179,10 @@
         <span class="btn-main-text">МИКРОФОН</span>
         <span class="btn-sub-text">УДЕРЖИВАЙТЕ</span>
       </button>
+      <button class="sgu-btn btn-secret interactive-control" id="btnSecret">
+        <span class="btn-badge">07</span>
+        <span class="btn-main-text">СЕКРЕТНЫЙ СИГНАЛ</span>
+      </button>
     </div>
     <div class="console-footer">
       <div class="volume-box">
@@ -193,7 +200,11 @@
       siren: "./siren.mp3",
       speed_siren: "./speed_siren.mp3",
       two_siren: "./two_siren.mp3",
-      cracksiren: "./cracksiren.mp3"
+      cracksiren: "./cracksiren.mp3",
+      koch_v1: "./koch_v1.mp3",
+      koch_v2: "./koch_v2.mp3",
+      bratan: "./bratan.mp3",
+      golda: "./golda.mp3"
     };
 
     let audioCtx = null;
@@ -230,7 +241,15 @@
     const btnTwo = document.getElementById("btnTwo");
     const btnCrackSiren = document.getElementById("btnCrackSiren");
     const btnMic = document.getElementById("btnMic");
+    const btnSecret = document.getElementById("btnSecret");
     const volRange = document.getElementById("volRange");
+
+    let currentSecretSource = null;
+    let currentSecretGain = null;
+    let currentSecretKey = null;
+    let currentSecretStartTime = 0;
+    let currentSecretDuration = 0;
+    let pendingSecretQueue = [];
 
     function initAudioContext() {
       if (!audioCtx) {
@@ -583,11 +602,107 @@
       el.addEventListener("pointerdown", fn);
     }
 
+    function playSecretBuffer(bufferKey, onEndedCallback) {
+      if (!audioCtx || !audioBuffers[bufferKey]) return;
+
+      if (currentSecretSource) {
+        try { currentSecretSource.stop(); } catch (e) {}
+        try { currentSecretSource.disconnect(); } catch (e) {}
+        currentSecretSource = null;
+      }
+      if (currentSecretGain) {
+        try { currentSecretGain.disconnect(); } catch (e) {}
+        currentSecretGain = null;
+      }
+
+      const sound = playSingleSoundWithFade(bufferKey, () => {
+        currentSecretSource = null;
+        currentSecretGain = null;
+        currentSecretKey = null;
+        currentSecretStartTime = 0;
+        currentSecretDuration = 0;
+        if (onEndedCallback) onEndedCallback();
+      });
+
+      if (sound) {
+        currentSecretSource = sound.source;
+        currentSecretGain = sound.gainNode;
+        currentSecretKey = bufferKey;
+        currentSecretStartTime = audioCtx.currentTime;
+        currentSecretDuration = audioBuffers[bufferKey].duration;
+      }
+    }
+
+    function triggerSecretSignal(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      initAudioContext();
+
+      const now = audioCtx.currentTime;
+
+      if (currentSecretSource && currentSecretDuration > 0) {
+        const elapsed = now - currentSecretStartTime;
+        if (currentSecretKey === "koch_v1") {
+          return;
+        }
+        if (elapsed < currentSecretDuration * 0.7) {
+          return;
+        }
+      }
+
+      pendingSecretQueue = [];
+
+      const options = [
+        ["koch_v1", "koch_v2"],
+        ["golda"],
+        ["bratan"]
+      ];
+
+      const chosenOption = options[Math.floor(Math.random() * options.length)];
+      pendingSecretQueue = [...chosenOption];
+
+      btnSecret.classList.add("active");
+      playNextInSecretQueue();
+    }
+
+    function playNextInSecretQueue() {
+      if (pendingSecretQueue.length === 0) {
+        btnSecret.classList.remove("active");
+        if (!isSirenActive && !isMicActive && lcdStatusText) {
+          lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+        }
+        return;
+      }
+
+      const nextKey = pendingSecretQueue.shift();
+
+      if (lcdStatusText) {
+        const names = {
+          koch_v1: "СЕКРЕТНЫЙ СИГНАЛ: KOCH V1",
+          koch_v2: "СЕКРЕТНЫЙ СИГНАЛ: KOCH V2",
+          golda: "СЕКРЕТНЫЙ СИГНАЛ: ГОЛДА",
+          bratan: "СЕКРЕТНЫЙ СИГНАЛ: БРАТАН"
+        };
+        lcdStatusText.textContent = names[nextKey] || "СЕКРЕТНЫЙ СИГНАЛ";
+      }
+
+      playSecretBuffer(nextKey, () => {
+        if (pendingSecretQueue.length > 0) {
+          playNextInSecretQueue();
+        } else {
+          btnSecret.classList.remove("active");
+          if (!isSirenActive && !isMicActive && lcdStatusText) {
+            lcdStatusText.textContent = "СГУ ДПС ГОТОВ К РАБОТЕ";
+          }
+        }
+      });
+    }
+
     bindButton(btnCrack, triggerCrack);
     bindButton(btnSiren, toggleSiren);
     bindButton(btnSpeed, triggerSpeedSiren);
     bindButton(btnTwo, triggerTwoSiren);
     bindButton(btnCrackSiren, triggerCrackSiren);
+    bindButton(btnSecret, triggerSecretSignal);
 
     btnMic.addEventListener("pointerdown", startMicrophone);
     btnMic.addEventListener("pointerup", stopMicrophone);
