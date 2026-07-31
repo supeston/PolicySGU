@@ -42,6 +42,7 @@ const REPLAY_GATED_KEYS = new Set([
   "speed_siren",
   "two_siren",
   "cracksiren",
+  "k_obochine",
   "golda",
   "korabel",
   "fura",
