@@ -8,6 +8,7 @@ const CATEGORIES = [
       { key: "speed_siren", label: "Быстрая сирена", file: "./sounds/DPS/speed_siren.mp3", className: "btn-speed" },
       { key: "two_siren", label: "Двойная сирена", file: "./sounds/DPS/two_siren.mp3", className: "btn-two" },
       { key: "cracksiren", label: "Кряк-сирена", file: "./sounds/DPS/cracksiren.mp3", className: "btn-cracksiren" },
+      { key: "k_obochine", label: "К обочине", file: "./sounds/DPS/k_obochine.mp3", className: "btn-pull-over" },
       { key: "microphone", label: "Микрофон", className: "btn-mic", microphone: true }
     ]
   },
