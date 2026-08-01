@@ -18,7 +18,8 @@ const CATEGORIES = [
     items: [
       { key: "koch_v1", label: "Коч", file: "./sounds/Mems/koch_v1.mp3", className: "tone-purple", volume: 4 },
       { key: "bratan", label: "Братан", file: "./sounds/Mems/bratan.mp3", className: "tone-pink", volume: 4 },
-      { key: "golda", label: "Голда", file: "./sounds/Mems/golda.mp3", className: "tone-indigo", volume: 1.5 }
+      { key: "golda", label: "Голда", file: "./sounds/Mems/golda.mp3", className: "tone-indigo", volume: 1.5 },
+      { key: "tebe", label: "Тебе", file: "./sounds/Mems/tebe.mp3", className: "tone-teal", volume: 4 }
     ]
   },
   {
@@ -47,7 +48,8 @@ const REPLAY_GATED_KEYS = new Set([
   "korabel",
   "fura",
   "poezd",
-  "car"
+  "car",
+  "tebe"
 ]);
 const REPLAY_UNLOCK_RATIO = 0.7;
 const audioBuffers = {};
