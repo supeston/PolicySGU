@@ -18,8 +18,19 @@ const CATEGORIES = [
     items: [
       { key: "koch_v1", label: "Коч", file: "./sounds/Mems/koch_v1.mp3", className: "tone-purple", volume: 4 },
       { key: "bratan", label: "Братан", file: "./sounds/Mems/bratan.mp3", className: "tone-pink", volume: 4 },
-      { key: "golda", label: "Голда", file: "./sounds/Mems/golda.mp3", className: "tone-indigo", volume: 1.5 },
-      { key: "tebe", label: "Тебе", file: "./sounds/Mems/tebe.mp3", className: "tone-teal", volume: 4 }
+      { key: "golda", label: "Голда", file: "./sounds/Mems/golda.mp3", className: "tone-indigo", volume: 2.2 },
+      { key: "tebe", label: "Тебе", file: "./sounds/Mems/tebe.mp3", className: "tone-teal", volume: 4 },
+      { key: "pantera", label: "Пантера", file: "./sounds/Mems/pantera.mp3", className: "tone-panther", volume: 3.5 },
+      {
+        key: "musor_drop",
+        label: "Мусор дроп",
+        hint: "Тап: дроп / Зажми: фулл",
+        file: "./sounds/Mems/musor_drop.mp3",
+        fullFile: "./sounds/Mems/full_chance_drop.mp3",
+        className: "btn-drop tone-gold",
+        volume: 3.6,
+        dualAction: true
+      }
     ]
   },
   {
@@ -36,7 +47,12 @@ const CATEGORIES = [
 
 const AUDIO_ITEMS = CATEGORIES
   .flatMap(category => category.items)
-  .filter(item => item.file);
+  .flatMap(item => {
+    const list = [];
+    if (item.file) list.push({ key: item.key, file: item.file });
+    if (item.fullFile) list.push({ key: `${item.key}_full`, file: item.fullFile });
+    return list;
+  });
 
 const MEM_SOUND_KEYS = new Set(CATEGORIES[1].items.map(item => item.key));
 const REPLAY_GATED_KEYS = new Set([
@@ -44,14 +60,11 @@ const REPLAY_GATED_KEYS = new Set([
   "two_siren",
   "cracksiren",
   "k_obochine",
-  "golda",
   "korabel",
   "fura",
-  "poezd",
-  "car",
-  "tebe"
+  "poezd"
 ]);
-const REPLAY_UNLOCK_RATIO = 0.7;
+const REPLAY_UNLOCK_RATIO = 0.65;
 const audioBuffers = {};
 const activeSoundCounts = new Map();
 const lastSoundStartTimes = new Map();
@@ -68,6 +81,15 @@ let micStream = null;
 let micSourceNode = null;
 let micGainNode = null;
 let isMicActive = false;
+
+// Dual-action build-up & drop states
+let dropPressTimer = null;
+let dropPressActive = false;
+let dropIsFullPlaying = false;
+let fullDropSourceNode = null;
+let fullDropGainNode = null;
+
+// Gestures and navigation
 let swipeStartX = null;
 let swipeStartY = null;
 let swipeMoved = false;
@@ -112,17 +134,24 @@ function renderCategory(direction = 1, animate = false) {
         ? isMicActive
         : (activeSoundCounts.get(item.key) || 0) > 0;
     const pressed = item.loop || item.microphone ? ` aria-pressed="${isActive}"` : "";
+    const dualAttr = item.dualAction ? ' data-dual-action="true"' : "";
+    const micAttr = item.microphone ? ' data-microphone="true"' : "";
+    const hintBadge = item.hint ? `<span class="btn-hint-badge">${item.hint}</span>` : "";
+    const chargeBar = item.dualAction ? `<span class="charge-bar" aria-hidden="true"></span>` : "";
 
     return `
       <button
         class="sound-btn ${item.className}${isActive ? " active" : ""}"
         type="button"
         data-sound-key="${item.key}"
-        ${item.microphone ? 'data-microphone="true"' : ""}
+        ${micAttr}
+        ${dualAttr}
         ${pressed}
       >
         <span class="btn-number">${String(index + 1).padStart(2, "0")}</span>
         <span class="btn-label">${item.label}</span>
+        ${hintBadge}
+        ${chargeBar}
       </button>
     `;
   }).join("");
@@ -176,17 +205,19 @@ function initAudioContext() {
     masterGainNode.gain.value = volumeMultiplier;
 
     outputLimiterNode = audioCtx.createDynamicsCompressor();
-    outputLimiterNode.threshold.value = -3;
+    outputLimiterNode.threshold.value = -2.5;
     outputLimiterNode.knee.value = 6;
     outputLimiterNode.ratio.value = 12;
-    outputLimiterNode.attack.value = 0.003;
-    outputLimiterNode.release.value = 0.18;
+    outputLimiterNode.attack.value = 0.002;
+    outputLimiterNode.release.value = 0.15;
 
     masterGainNode.connect(outputLimiterNode);
     outputLimiterNode.connect(audioCtx.destination);
   }
 
-  if (audioCtx.state === "suspended") audioCtx.resume();
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
 }
 
 function setMasterVolume(percent) {
@@ -217,7 +248,7 @@ async function preloadAudio() {
     console.error(error);
     loadError.style.display = "block";
   } finally {
-    await tempCtx.close();
+    try { await tempCtx.close(); } catch {}
   }
 }
 
@@ -232,13 +263,24 @@ function updateSoundButton(key) {
   if (key === "siren") button.setAttribute("aria-pressed", String(active));
 }
 
-function playOneShot(item) {
+function triggerPadHitAnimation(key) {
+  const button = getSoundButton(key);
+  if (!button) return;
+  button.classList.remove("pad-hit");
+  void button.offsetWidth;
+  button.classList.add("pad-hit");
+  if (navigator.vibrate) {
+    try { navigator.vibrate(12); } catch {}
+  }
+}
+
+function playOneShot(item, options = {}) {
   if (!audioCtx || !audioBuffers[item.key]) return;
 
   const now = audioCtx.currentTime;
   const duration = audioBuffers[item.key].duration;
 
-  if (REPLAY_GATED_KEYS.has(item.key)) {
+  if (REPLAY_GATED_KEYS.has(item.key) && !options.force) {
     const lastStartedAt = lastSoundStartTimes.get(item.key);
     if (
       lastStartedAt !== undefined
@@ -251,9 +293,10 @@ function playOneShot(item) {
 
   const source = audioCtx.createBufferSource();
   const gainNode = audioCtx.createGain();
-  const fadeIn = 0.015;
-  const fadeOut = MEM_SOUND_KEYS.has(item.key) ? 0.2 : 0.18;
-  const targetVolume = item.volume || 1;
+  const fadeIn = 0.008;
+  const fadeOut = MEM_SOUND_KEYS.has(item.key) ? 0.09 : 0.18;
+  const boost = options.boostVolume || 1;
+  const targetVolume = (item.volume || 1) * boost;
 
   source.buffer = audioBuffers[item.key];
   gainNode.gain.setValueAtTime(0.0001, now);
@@ -268,6 +311,7 @@ function playOneShot(item) {
 
   activeSoundCounts.set(item.key, (activeSoundCounts.get(item.key) || 0) + 1);
   updateSoundButton(item.key);
+  triggerPadHitAnimation(item.key);
 
   source.onended = () => {
     try { source.disconnect(); } catch {}
@@ -276,6 +320,7 @@ function playOneShot(item) {
     updateSoundButton(item.key);
   };
   source.start(now);
+  return source;
 }
 
 function toggleSiren() {
@@ -313,16 +358,119 @@ function toggleSiren() {
     isSirenActive = true;
   }
   updateSoundButton("siren");
+  triggerPadHitAnimation("siren");
 }
 
 function triggerSound(key) {
   const item = getItemByKey(key);
-  if (!item || item.microphone) return;
+  if (!item || item.microphone || item.dualAction) return;
   initAudioContext();
   if (item.loop) toggleSiren();
   else playOneShot(item);
 }
 
+// ----------------- DUAL-ACTION FULL DROP LOGIC -----------------
+function stopFullDropAudio(fadeDuration = 0.05) {
+  if (fullDropSourceNode && fullDropGainNode && audioCtx) {
+    const now = audioCtx.currentTime;
+    const src = fullDropSourceNode;
+    const gn = fullDropGainNode;
+    try {
+      gn.gain.cancelScheduledValues(now);
+      gn.gain.setValueAtTime(Math.max(gn.gain.value, 0.0001), now);
+      gn.gain.linearRampToValueAtTime(0.0001, now + fadeDuration);
+      src.stop(now + fadeDuration);
+    } catch {}
+    setTimeout(() => {
+      try { src.disconnect(); } catch {}
+      try { gn.disconnect(); } catch {}
+    }, (fadeDuration + 0.05) * 1000);
+  }
+  fullDropSourceNode = null;
+  fullDropGainNode = null;
+  dropIsFullPlaying = false;
+
+  const btn = getSoundButton("musor_drop");
+  btn?.classList.remove("charging");
+}
+
+function startFullDropAudio() {
+  if (!audioCtx || !audioBuffers["musor_drop_full"]) return;
+  stopFullDropAudio(0.02);
+
+  const now = audioCtx.currentTime;
+  fullDropSourceNode = audioCtx.createBufferSource();
+  fullDropGainNode = audioCtx.createGain();
+
+  fullDropSourceNode.buffer = audioBuffers["musor_drop_full"];
+  fullDropGainNode.gain.setValueAtTime(0.0001, now);
+  fullDropGainNode.gain.linearRampToValueAtTime(3.8, now + 0.08);
+
+  fullDropSourceNode.connect(fullDropGainNode);
+  fullDropGainNode.connect(masterGainNode);
+
+  dropIsFullPlaying = true;
+  const btn = getSoundButton("musor_drop");
+  btn?.classList.add("charging");
+
+  if (navigator.vibrate) {
+    try { navigator.vibrate([25, 30, 25]); } catch {}
+  }
+
+  fullDropSourceNode.onended = () => {
+    stopFullDropAudio();
+    if (btn) {
+      btn.classList.remove("charging", "active", "exploded");
+      void btn.offsetWidth;
+      btn.classList.add("exploded");
+      setTimeout(() => btn.classList.remove("exploded"), 500);
+    }
+    if (navigator.vibrate) {
+      try { navigator.vibrate([40, 50, 80]); } catch {}
+    }
+  };
+
+  fullDropSourceNode.start(now);
+}
+
+function handleDropPressStart(event) {
+  if (event && event.type !== "keydown") event.preventDefault();
+  initAudioContext();
+
+  dropPressActive = true;
+  clearTimeout(dropPressTimer);
+
+  const btn = getSoundButton("musor_drop");
+  btn?.classList.add("active");
+
+  dropPressTimer = setTimeout(() => {
+    if (!dropPressActive) return;
+    startFullDropAudio();
+  }, 240);
+}
+
+function handleDropPressEnd(event) {
+  if (event && event.type !== "keyup") event.preventDefault();
+  if (!dropPressActive) return;
+
+  const wasHolding = dropIsFullPlaying;
+  clearTimeout(dropPressTimer);
+  dropPressTimer = null;
+  dropPressActive = false;
+
+  const btn = getSoundButton("musor_drop");
+  btn?.classList.remove("active");
+
+  if (!wasHolding) {
+    // Быстрый клик/тап: играет обычный короткий мусор дроп!
+    const dropItem = getItemByKey("musor_drop");
+    if (dropItem) {
+      playOneShot(dropItem, { force: true });
+    }
+  }
+}
+
+// ----------------- MICROPHONE LOGIC -----------------
 async function startMicrophone(event) {
   event?.preventDefault();
   initAudioContext();
@@ -377,20 +525,26 @@ function stopMicrophone(event) {
   button?.setAttribute("aria-pressed", "false");
 }
 
-buttonsGrid.addEventListener("click", event => {
-  const button = event.target.closest("[data-sound-key]");
-  if (!button || button.dataset.microphone === "true") return;
-  triggerSound(button.dataset.soundKey);
-});
-
+// ----------------- EVENT LISTENERS & MULTI-TOUCH -----------------
 buttonsGrid.addEventListener("pointerdown", event => {
-  const button = event.target.closest('[data-microphone="true"]');
+  const button = event.target.closest("[data-sound-key]");
   if (!button) return;
-  clearTimeout(microphoneStartTimer);
-  microphoneStartTimer = setTimeout(() => {
-    microphoneStartTimer = null;
-    if (!swipeMoved) startMicrophone(event);
-  }, 140);
+
+  if (button.dataset.dualAction === "true") {
+    handleDropPressStart(event);
+    return;
+  }
+
+  if (button.dataset.microphone === "true") {
+    clearTimeout(microphoneStartTimer);
+    microphoneStartTimer = setTimeout(() => {
+      microphoneStartTimer = null;
+      if (!swipeMoved) startMicrophone(event);
+    }, 120);
+    return;
+  }
+
+  triggerSound(button.dataset.soundKey);
 });
 
 function cancelMicrophoneStart() {
@@ -401,10 +555,13 @@ function cancelMicrophoneStart() {
 window.addEventListener("pointerup", event => {
   cancelMicrophoneStart();
   stopMicrophone(event);
+  handleDropPressEnd(event);
 });
+
 window.addEventListener("pointercancel", event => {
   cancelMicrophoneStart();
   stopMicrophone(event);
+  handleDropPressEnd(event);
 });
 
 function beginSwipe(event) {
@@ -424,6 +581,12 @@ function trackSwipe(event) {
   if (Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY)) {
     swipeMoved = true;
     cancelMicrophoneStart();
+    if (dropPressActive && !dropIsFullPlaying) {
+      clearTimeout(dropPressTimer);
+      dropPressActive = false;
+      const btn = getSoundButton("musor_drop");
+      btn?.classList.remove("active", "charging");
+    }
     if (event.cancelable) event.preventDefault();
   }
 }
@@ -457,9 +620,6 @@ gestureSurface.addEventListener("click", event => {
 gestureSurface.addEventListener("pointerdown", beginSwipe);
 gestureSurface.addEventListener("pointermove", trackSwipe);
 gestureSurface.addEventListener("pointerup", finishSwipe);
-gestureSurface.addEventListener("mousedown", beginSwipe);
-gestureSurface.addEventListener("mousemove", trackSwipe);
-gestureSurface.addEventListener("mouseup", finishSwipe);
 gestureSurface.addEventListener("touchstart", beginSwipe, { passive: true });
 gestureSurface.addEventListener("touchmove", trackSwipe, { passive: false });
 gestureSurface.addEventListener("touchend", finishSwipe, { passive: true });
@@ -477,9 +637,73 @@ gestureSurface.addEventListener("wheel", event => {
   setTimeout(() => { wheelLocked = false; }, 360);
 }, { passive: false });
 
-categoryBrowser.addEventListener("keydown", event => {
-  if (event.key === "ArrowRight") switchCategory(1);
-  if (event.key === "ArrowLeft") switchCategory(-1);
+// Keyboard hotkeys
+window.addEventListener("keydown", event => {
+  if (event.target.closest?.("input") || event.repeat) return;
+
+  if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
+    switchCategory(1);
+    return;
+  }
+  if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
+    switchCategory(-1);
+    return;
+  }
+
+  const category = getCurrentCategory();
+  if (!category) return;
+
+  if (event.code === "Space") {
+    event.preventDefault();
+    if (category.id === "mems") {
+      handleDropPressStart(event);
+      return;
+    }
+    if (category.id === "dps") {
+      triggerSound("siren");
+      return;
+    }
+    if (category.id === "gudok") {
+      triggerSound("poezd");
+      return;
+    }
+  }
+
+  const num = parseInt(event.key, 10);
+  if (!isNaN(num) && num >= 1 && num <= category.items.length) {
+    event.preventDefault();
+    const item = category.items[num - 1];
+    if (item.dualAction) {
+      handleDropPressStart(event);
+    } else if (item.microphone) {
+      startMicrophone();
+    } else {
+      triggerSound(item.key);
+    }
+  }
+});
+
+window.addEventListener("keyup", event => {
+  if (event.target.closest?.("input")) return;
+  const category = getCurrentCategory();
+  if (!category) return;
+
+  if (event.code === "Space") {
+    if (category.id === "mems") {
+      handleDropPressEnd(event);
+    }
+    return;
+  }
+
+  const num = parseInt(event.key, 10);
+  if (!isNaN(num) && num >= 1 && num <= category.items.length) {
+    const item = category.items[num - 1];
+    if (item.dualAction) {
+      handleDropPressEnd(event);
+    } else if (item.microphone) {
+      stopMicrophone();
+    }
+  }
 });
 
 volumeSlider.addEventListener("input", () => {
@@ -489,3 +713,4 @@ volumeSlider.addEventListener("input", () => {
 renderCategory();
 setMasterVolume(100);
 window.addEventListener("DOMContentLoaded", preloadAudio);
+
