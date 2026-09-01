@@ -24,7 +24,7 @@ const CATEGORIES = [
       {
         key: "musor_drop",
         label: "Мусор дроп",
-        hint: "Тап: дроп / Зажми: фулл",
+        hint: "Тап / Зажми",
         file: "./sounds/Mems/musor_drop.mp3",
         fullFile: "./sounds/Mems/full_chance_drop.mp3",
         className: "btn-drop tone-gold",
